@@ -1,0 +1,76 @@
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Profile {
+  id           String        @id
+  name         String?       @unique
+  stories      Story[]       @relation("ProfileToStory")
+  paymentLinks PaymentLink[] @relation("ProfileToPaymentLink")
+  store        Store?        @relation("ProfileToStore")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Story {
+  id                     String     @id @default(uuid())
+  name                   String?
+  description            String?
+  image                  String?
+  chapters               Chapter[]  @relation("StoryToChapter")
+  categories             Category[] @relation("StoryToCategory")
+  tags                   String[]
+  views                  Int        @default(0)
+  subscriptionAllowed    Boolean    @default(false)
+  numberOfLockedChapters Int?
+  subscriptionPrice      Int?
+  profile                Profile    @relation("ProfileToStory", fields: [userId], references: [id])
+  userId                 String
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+
+  @@index([userId])
+}
+
+model Category {
+  id      String  @id @default(uuid())
+  name    String  @unique
+  stories Story[] @relation("StoryToCategory")
+}
+
+model Chapter {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  published Boolean  @default(false)
+  story     Story?   @relation("StoryToChapter", fields: [storyId], references: [id])
+  storyId   String
+  sequence  Int?
+  createdAt DateTime @default(now())
+
+  @@index([storyId])
+}
+
+model Store {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  profileId String   @unique
+  profile   Profile  @relation("ProfileToStore", fields: [profileId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PaymentLink {
+  id      String  @id @default(uuid())
+  address String
+  profile Profile @relation("ProfileToPaymentLink", fields: [userId], references: [id])
+  userId  String
+
+  @@index([userId])
+}
