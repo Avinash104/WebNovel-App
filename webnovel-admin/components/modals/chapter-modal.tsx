@@ -1,12 +1,6 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import axios from "axios"
-import React, { useState } from "react"
-import { useForm } from "react-hook-form"
-import { toast } from "react-hot-toast"
-import * as z from "zod"
-
+import TextEditor from "@/components/text-editor"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -19,7 +13,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Modal } from "@/components/ui/modal"
 import { useChapterModal } from "@/hooks/use-chapter-modal"
+import { zodResolver } from "@hookform/resolvers/zod"
+import axios from "axios"
 import { useParams } from "next/navigation"
+import React, { useState } from "react"
+import { useForm } from "react-hook-form"
+import { toast } from "react-hot-toast"
+import * as z from "zod"
 
 const formSchema = z.object({
   title: z.string().min(3).max(255),
@@ -59,8 +59,8 @@ export const ChapterModal = () => {
 
   return (
     <Modal
-      title="Create story"
-      description="Add a new story to manage products and categories."
+      title="Create a new chapter"
+      description="Add a new chapter to your story..."
       isOpen={chapterModal.isOpen}
       onClose={chapterModal.onClose}
     >
@@ -93,16 +93,21 @@ export const ChapterModal = () => {
                     <FormItem>
                       <FormLabel>Content</FormLabel>
                       <FormControl>
-                        <Input
-                          disabled={loading}
-                          placeholder="Content of the chapter"
-                          {...field}
-                        />
+                        <div className="border rounded-md">
+                          <TextEditor
+                            initialContent={field.value}
+                            onUpdate={(content: string) =>
+                              field.onChange(content)
+                            }
+                            disabled={loading}
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
                 <div className="pt-6 space-x-2 flex items-center justify-end w-full">
                   <Button
                     disabled={loading}

@@ -1,12 +1,6 @@
 "use client"
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import axios from "axios"
-import React, { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import { toast } from "react-hot-toast"
-import * as z from "zod"
-
+import TipTapEditor from "@/components/text-editor"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -19,7 +13,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Modal } from "@/components/ui/modal"
 import { useChapterEditModal } from "@/hooks/use-chapter-edit-modal"
+import { zodResolver } from "@hookform/resolvers/zod"
+import axios from "axios"
 import { useParams } from "next/navigation"
+import React, { useEffect, useState } from "react"
+import { useForm } from "react-hook-form"
+import { toast } from "react-hot-toast"
+import * as z from "zod"
 
 const formSchema = z.object({
   title: z.string().min(3).max(255),
@@ -131,10 +131,10 @@ export const ChapterEditModal: React.FC<ChapterEditModalProps> = ({
               <FormItem>
                 <FormLabel>Content</FormLabel>
                 <FormControl>
-                  <Input
+                  <TipTapEditor
+                    initialContent={field.value}
+                    onUpdate={(content: string) => field.onChange(content)}
                     disabled={loading}
-                    placeholder="Content of the chapter"
-                    {...field}
                   />
                 </FormControl>
                 <FormMessage />
