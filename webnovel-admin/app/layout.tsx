@@ -1,3 +1,4 @@
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { ModalProvider } from "@/providers/modal-provider"
 import { ThemeProvider } from "@/providers/theme-provider"
 import { ClerkProvider } from "@clerk/nextjs"
@@ -38,9 +39,11 @@ export default function RootLayout({
             defaultTheme="dark"
             enableSystem={false}
           >
-            <Toaster />
-            <ModalProvider />
-            {children}
+            <TooltipProvider>
+              <Toaster />
+              <ModalProvider />
+              {children}
+            </TooltipProvider>
           </ThemeProvider>
         </body>
       </html>
