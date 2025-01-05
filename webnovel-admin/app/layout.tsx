@@ -34,17 +34,19 @@ export default function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem={false}
-          >
-            <TooltipProvider>
-              <Toaster />
-              <ModalProvider />
-              {children}
-            </TooltipProvider>
-          </ThemeProvider>
+          <div className="top-0 max-w-7xl mx-auto px-[0.5] md:px-8">
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="dark"
+              enableSystem={false}
+            >
+              <TooltipProvider>
+                <Toaster />
+                <ModalProvider />
+                {children}
+              </TooltipProvider>
+            </ThemeProvider>
+          </div>
         </body>
       </html>
     </ClerkProvider>

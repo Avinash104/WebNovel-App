@@ -22,7 +22,7 @@ model Story {
   id                     String     @id @default(uuid())
   name                   String?
   description            String?
-  image                  String?
+  image                  String?    @default("https://res.cloudinary.com/df9eayrlw/image/upload/v1735992315/story-icon-png-8_wvpzbr.png")
   chapters               Chapter[]  @relation("StoryToChapter")
   categories             Category[] @relation("StoryToCategory")
   tags                   String[]
@@ -58,12 +58,26 @@ model Chapter {
 }
 
 model Store {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  profileId String   @unique
-  profile   Profile  @relation("ProfileToStore", fields: [profileId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String      @id @default(uuid())
+  storeItem StoreItem[] @relation("StoreToStoreItem")
+  profile   Profile     @relation("ProfileToStore", fields: [profileId], references: [id])
+  profileId String      @unique
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model StoreItem {
+  id          String   @id @default(uuid())
+  title       String
+  image       String?
+  description String
+  price       Int
+  pdfLink     String
+  store       Store    @relation("StoreToStoreItem", fields: [storeId], references: [id])
+  storeId     String
+  createdAt   DateTime @default(now())
+
+  @@index([storeId])
 }
 
 model PaymentLink {

@@ -113,10 +113,29 @@ export async function DELETE(
       return new NextResponse("Story id is required", { status: 400 })
     }
 
-    const story = await prismadb.story.delete({
+    const storyByUserId = await prismadb.story.findFirst({
       where: {
         id: params.storyId,
         userId: user.id,
+      },
+    })
+
+    if (!storyByUserId) {
+      return new NextResponse("Story not found or unauthorized", {
+        status: 404,
+      })
+    }
+
+    // Delete all related chapters first before deleting the story
+    await prismadb.chapter.deleteMany({
+      where: {
+        storyId: params.storyId,
+      },
+    })
+
+    const story = await prismadb.story.delete({
+      where: {
+        id: params.storyId,
       },
     })
 

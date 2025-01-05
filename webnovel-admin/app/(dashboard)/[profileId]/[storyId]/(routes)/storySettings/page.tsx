@@ -1,7 +1,7 @@
 import prismadb from "@/lib/prismadb"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
-import { SettingsForm } from "./components/settings-form"
+import { StorySettingsForm } from "./components/story-settings-form"
 
 const SettingsPage = async ({
   params,
@@ -31,7 +31,7 @@ const SettingsPage = async ({
   return (
     <div className="flex-col">
       <div className="flex-1 space-y-4 p-8 pt-6">
-        <SettingsForm initialData={story} />
+        <StorySettingsForm initialData={story} />
       </div>
     </div>
   )
