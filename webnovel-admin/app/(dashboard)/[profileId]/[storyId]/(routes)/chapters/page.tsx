@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button"
 import { useChapterModal } from "@/hooks/use-chapter-modal"
 import axios from "axios"
 import { useEffect, useState } from "react"
-import { ChapterList } from "./components/chapterList"
+import { toast } from "react-hot-toast"
+import { ChapterList } from "./components/chapter-list"
 
 type Chapter = {
   id: string
@@ -29,7 +30,14 @@ const ChaptersPage = ({
         const response = await axios.get(`/api/stories/${storyId}/chapters`)
         setChapters(response.data)
       } catch (error) {
-        console.error("Error fetching chapters:", error)
+        if (axios.isAxiosError(error)) {
+          toast.error(
+            "Error while fetching the chapters.",
+            error.response?.data?.message
+          )
+        } else {
+          toast.error("Error while fetching the chapters.")
+        }
       } finally {
         setLoading(false)
       }

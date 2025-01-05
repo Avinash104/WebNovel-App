@@ -57,11 +57,11 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
                   Select the categories that best describe your story.
                 </FormDescription>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {storyCategories.map((category) => (
                   <div
                     key={category.id}
-                    className="flex flex-row items-start space-x-3"
+                    className="flex flex-row items-start space-x-2"
                   >
                     <FormControl>
                       <Checkbox
@@ -82,7 +82,7 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({
                         }}
                       />
                     </FormControl>
-                    <FormLabel className="text-sm font-normal">
+                    <FormLabel className="bottom-0 text-base md:text-xl font-semibold ml-5">
                       {category.name}
                     </FormLabel>
                   </div>

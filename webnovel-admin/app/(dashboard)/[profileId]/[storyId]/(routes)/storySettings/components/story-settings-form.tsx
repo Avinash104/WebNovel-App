@@ -30,6 +30,10 @@ import { useForm } from "react-hook-form"
 import { toast } from "react-hot-toast"
 import * as z from "zod"
 
+interface StorySettingsFormProps {
+  initialData: Story
+}
+
 const formSchema = z.object({
   name: z.string().min(2),
   description: z
@@ -62,13 +66,11 @@ type Story = {
   numberOfLockedChapters?: number
 }
 
-type SettingsFormValues = z.infer<typeof formSchema>
+type StorySettingsFormValues = z.infer<typeof formSchema>
 
-interface SettingsFormProps {
-  initialData: Story
-}
-
-export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
+export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
+  initialData,
+}) => {
   const params = useParams()
   const router = useRouter()
   const origin = useOrigin()
@@ -81,7 +83,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
   const [selectedTags, setSelectedTags] = useState<string[]>(initialData.tags)
   const [storyCategories, setStoryCategories] = useState<Category[]>([])
 
-  const form = useForm<SettingsFormValues>({
+  const form = useForm<StorySettingsFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       ...initialData,
@@ -117,16 +119,17 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
     setIsSubscriptionAllowed(initialData.subscriptionAllowed ?? false)
   }, [initialData, form])
 
-  // useEffect(() => {
-  //   console.log("Form Errors:", form.formState.errors)
-  // }, [form.formState.errors])
+  useEffect(() => {
+    console.log("Form Errors:", form.formState.errors)
+  }, [form.formState.errors])
 
-  const onSubmit = async (values: SettingsFormValues) => {
+  const onSubmit = async (values: StorySettingsFormValues) => {
     try {
       setLoading(true)
-      console.log("submitting to storyId", values.tags)
-      // await axios.patch(`/api/stories/${storyId}`, values)
-      // window.location.reload()
+      const payload = { ...values, tags: selectedTags }
+      console.log("submitting to storyId", payload)
+      await axios.patch(`/api/stories/${storyId}`, payload)
+      window.location.reload()
       toast.success("Story updated.")
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -192,7 +195,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Story Name</FormLabel>
                   <FormControl>
                     <Input
                       disabled={loading}
@@ -230,6 +233,11 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
+                    {/* <TipTapEditor
+                      initialContent={field.value}
+                      onUpdate={(content: string) => field.onChange(content)}
+                      disabled={loading}
+                    /> */}
                     <Textarea
                       disabled={loading}
                       placeholder="Story description"
@@ -296,7 +304,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({ initialData }) => {
                   name="numberOfLockedChapters"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tags</FormLabel>
+                      <FormLabel>Number of chapters behind paywall</FormLabel>
                       <FormControl>
                         <Input
                           type="number"

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { FormField, FormItem, FormLabel } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { UseFormReturn } from "react-hook-form"
 
 type formType = {
@@ -32,7 +32,10 @@ const TagSelector: React.FC<TagSelectorProps> = ({
   setSelectedTags,
 }) => {
   const [tagInput, setTagInput] = useState("")
-  const [isInputFocused, setIsInputFocused] = useState(false)
+
+  useEffect(() => {
+    form.setValue("tags", selectedTags)
+  }, [selectedTags, form])
 
   const handleAddNewTag = () => {
     const trimmedInput = tagInput.trim()
@@ -60,24 +63,18 @@ const TagSelector: React.FC<TagSelectorProps> = ({
                 onChange={(e) => setTagInput(e.target.value)}
                 placeholder="Add a tag"
                 disabled={loading}
-                onFocus={() => setIsInputFocused(true)}
-                onBlur={() => setIsInputFocused(false)}
               />
-              {isInputFocused && tagInput.trim() && (
-                <div
-                  className="absolute bg-transparent mt-1 p-2 w-fit"
-                  onMouseDown={(e) => e.preventDefault()}
+              <>
+                <Button
+                  type="button"
+                  className="bg-sky-400 absolute bottom-[2px] right-[2px] z-10 w-20 md:w-36"
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleAddNewTag}
                 >
-                  <Button
-                    className="bg-sky-400"
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleAddNewTag}
-                  >
-                    Add <b>{tagInput.trim()}</b>
-                  </Button>
-                </div>
-              )}
+                  Add
+                </Button>
+              </>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
               {selectedTags.map((tag) => (
