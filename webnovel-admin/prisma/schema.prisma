@@ -73,6 +73,7 @@ model StoreItem {
   description String
   price       Int
   pdfLink     String
+  thumbnail   String?
   store       Store    @relation("StoreToStoreItem", fields: [storeId], references: [id])
   storeId     String
   createdAt   DateTime @default(now())

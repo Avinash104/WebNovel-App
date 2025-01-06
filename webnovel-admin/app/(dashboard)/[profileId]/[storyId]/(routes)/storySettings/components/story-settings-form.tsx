@@ -215,7 +215,7 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
                   <FormLabel>Cover Image</FormLabel>
                   <FormControl>
                     <ImageUploader
-                      value={field.value ? [field.value] : []}
+                      value={field.value ? field.value : ""}
                       disabled={loading}
                       onChange={(url) => field.onChange(url)}
                       onRemove={() => field.onChange("")}
@@ -233,11 +233,6 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    {/* <TipTapEditor
-                      initialContent={field.value}
-                      onUpdate={(content: string) => field.onChange(content)}
-                      disabled={loading}
-                    /> */}
                     <Textarea
                       disabled={loading}
                       placeholder="Story description"

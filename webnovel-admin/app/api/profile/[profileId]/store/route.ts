@@ -11,7 +11,7 @@ export async function POST(
     const user = await currentUser()
     const body = await req.json()
 
-    const { title, image, description, price, pdfLink } = body
+    const { title, description, price, pdfLink, thumbnail } = body
 
     if (!user?.id) {
       return new NextResponse("Unauthenticated", { status: 403 })
@@ -28,9 +28,10 @@ export async function POST(
     if (!price) {
       return new NextResponse("Price field can't be empty", { status: 400 })
     }
-    // if (!pdfLink) {
-    //   return new NextResponse("Pdf file is required", { status: 400 })
-    // }
+
+    if (!pdfLink) {
+      return new NextResponse("Pdf file is required", { status: 400 })
+    }
 
     if (!params.profileId) {
       return new NextResponse("Profile id is required", { status: 400 })
@@ -54,10 +55,10 @@ export async function POST(
     const storeItem = await prismadb.storeItem.create({
       data: {
         title,
-        image,
         description,
         price,
-        pdfLink: "genericURL",
+        pdfLink,
+        thumbnail,
         storeId: storeByProfileId.id,
       },
     })
