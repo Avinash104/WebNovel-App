@@ -67,7 +67,6 @@ const PDFUploader: React.FC<PDFUploaderProps> = ({
                 <Trash className="h-4 w-4" />
               </Button>
             </div>
-            {/* Display a placeholder or PDF icon */}
             <div className="flex items-center justify-center w-full h-full bg-gray-200 text-gray-700">
               <Image
                 fill

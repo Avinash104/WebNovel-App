@@ -69,7 +69,6 @@ model Store {
 model StoreItem {
   id          String   @id @default(uuid())
   title       String
-  image       String?
   description String
   price       Int
   pdfLink     String

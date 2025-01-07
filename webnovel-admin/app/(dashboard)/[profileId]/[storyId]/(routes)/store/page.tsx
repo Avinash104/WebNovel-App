@@ -15,7 +15,7 @@ const StorePage = ({
 }) => {
   const [loading, setLoading] = useState(true)
   const [storeItems, setStoreItems] = useState<StoreItem[]>([])
-  const [storeFormDisplay, setStoreFormDisplay] = useState<boolean>(true)
+  const [storeFormDisplay, setStoreFormDisplay] = useState<boolean>(false)
 
   useEffect(() => {
     const fetchStoreItems = async () => {
