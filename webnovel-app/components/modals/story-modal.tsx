@@ -20,7 +20,7 @@ import * as z from "zod"
 import TagSelector from "../tag-selector"
 
 const formSchema = z.object({
-  name: z
+  title: z
     .string()
     .min(4, { message: "Name must be at least 4 characters long." }),
   description: z
@@ -40,7 +40,7 @@ export const StoryModal = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      title: "",
       description: "",
       tags: [],
     },
@@ -84,7 +84,7 @@ export const StoryModal = () => {
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="title"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Name</FormLabel>

@@ -2,9 +2,9 @@
 
 import CategorySelector from "@/components/category-selector"
 import ImageUploader from "@/components/image-uploader"
+import { MembershipLevelSelector } from "@/components/membership-level-selector"
 import { AlertModal } from "@/components/modals/alert-modal"
 import TagSelector from "@/components/tag-selector"
-import { ApiAlert } from "@/components/ui/api-alert"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -19,9 +19,8 @@ import { Heading } from "@/components/ui/heading"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-import { useOrigin } from "@/hooks/use-origin"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Category } from "@prisma/client"
+import { Category, MembershipLevel } from "@prisma/client"
 import axios from "axios"
 import { Trash } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
@@ -34,8 +33,22 @@ interface StorySettingsFormProps {
   initialData: Story
 }
 
+const membershipLevelSchema = z.object({
+  title: z.enum(["BRONZE", "SILVER", "GOLD"]),
+  chaptersLocked: z
+    .number()
+    .int({ message: "Must be an integer" })
+    .min(1, { message: "Must lock at least 1 chapter" }),
+  price: z
+    .number({ invalid_type_error: "Price must be a number" })
+    .positive({ message: "Price must be a positive number." })
+    .min(0, { message: "Price must be greater than or equal to 0" }),
+})
+
 const formSchema = z.object({
-  name: z.string().min(2),
+  title: z
+    .string()
+    .min(2, { message: "Title must be at least 2 characters long." }),
   description: z
     .string()
     .min(4, { message: "Description must be at least 4 characters long." })
@@ -47,23 +60,25 @@ const formSchema = z.object({
   categories: z
     .array(z.string())
     .min(2, {
-      message: "You have to select at least two category.",
+      message: "You have to select at least two categories.",
     })
-    .refine((value) => value.some((item) => item)),
+    .refine((value) => value.some((item) => item), {
+      message: "Category selection cannot be empty.",
+    }),
   subscriptionAllowed: z.boolean(),
-  subscriptionPrice: z.number({ message: "Should be a number!" }).min(0),
-  numberOfLockedChapters: z.number({ message: "Should be a number!" }).min(0),
+  membershipLevels: z
+    .array(membershipLevelSchema)
+    .min(1, { message: "You must define at least one membership level." }),
 })
 
 type Story = {
-  name: string
+  title: string
   description: string
-  tags: string[]
   image?: string
+  tags: string[]
   categories?: Category[]
   subscriptionAllowed?: boolean
-  subscriptionPrice?: number
-  numberOfLockedChapters?: number
+  membershipLevels?: MembershipLevel[]
 }
 
 type StorySettingsFormValues = z.infer<typeof formSchema>
@@ -73,7 +88,6 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
 }) => {
   const params = useParams()
   const router = useRouter()
-  const origin = useOrigin()
   const { storyId } = params
 
   const [open, setOpen] = useState<boolean>(false)
@@ -88,13 +102,17 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
     defaultValues: {
       ...initialData,
       categories: initialData.categories?.map((cat) => cat.id) || [],
+      membershipLevels: initialData.membershipLevels?.map((level) => ({
+        title: level.title,
+        chaptersLocked: level.chaptersLocked,
+        price: level.price,
+      })) || [{ title: "BRONZE", chaptersLocked: 1, price: 0.99 }],
     },
   })
 
   useEffect(() => {
     if (!isSubscriptionAllowed) {
-      form.setValue("subscriptionPrice", 0)
-      form.setValue("numberOfLockedChapters", 0)
+      form.setValue("membershipLevels", [])
     }
   }, [isSubscriptionAllowed, form])
 
@@ -185,14 +203,11 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
       </div>
       <Separator />
       <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-8 w-full"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-rows gap-8">
             <FormField
               control={form.control}
-              name="name"
+              name="title"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Story Name</FormLabel>
@@ -270,52 +285,7 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
               )}
             />
             {isSubscriptionAllowed && (
-              <div className="">
-                <FormField
-                  control={form.control}
-                  name="subscriptionPrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Select price for the Gold Tier membership
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          disabled={loading}
-                          placeholder="In US dollars.."
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value) || 0)
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="numberOfLockedChapters"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of chapters behind paywall</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          disabled={loading}
-                          placeholder="No. of chapters locked"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value) || 0)
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <MembershipLevelSelector form={form} loading={loading} />
             )}
           </div>
           <Button disabled={loading} className="ml-auto" type="submit">
@@ -324,11 +294,6 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
         </form>
       </Form>
       <Separator />
-      <ApiAlert
-        title="NEXT_PUBLIC_API_URL"
-        variant="public"
-        description={`${origin}/api/stories/${params.storyId}`}
-      />
     </>
   )
 }

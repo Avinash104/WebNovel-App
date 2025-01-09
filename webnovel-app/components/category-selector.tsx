@@ -9,19 +9,24 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Category } from "@prisma/client"
+import { Category, MembershipTitle } from "@prisma/client"
 import React, { useEffect, useState } from "react"
 import { UseFormReturn } from "react-hook-form"
 
+type MembershipLevel = {
+  title: MembershipTitle
+  chaptersLocked: number
+  price: number
+}
+
 type formType = {
-  name: string
+  title: string
   description: string
-  tags: string[]
   image?: string | null
-  categories?: string[] | null
+  tags: string[]
+  categories?: Category[] | null
   subscriptionAllowed?: boolean
-  subscriptionPrice?: number | null
-  numberOfLockedChapters?: number | null
+  membershipLevels?: MembershipLevel[] | null
 }
 
 type CategorySelectorProps = {
