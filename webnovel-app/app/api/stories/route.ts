@@ -12,14 +12,14 @@ export async function POST(req: Request) {
     }
     const body = await req.json()
 
-    const { name, description, tags } = body
+    const { title, description, tags } = body
 
     if (!user.id) {
       return new NextResponse("Unauthorized", { status: 403 })
     }
 
-    if (!name) {
-      return new NextResponse("Name is required", { status: 400 })
+    if (!title) {
+      return new NextResponse("Story title is required", { status: 400 })
     }
 
     if (!description) {
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
     const story = await prismadb.story.create({
       data: {
-        name,
+        title,
         description,
         tags,
         userId: user.id,

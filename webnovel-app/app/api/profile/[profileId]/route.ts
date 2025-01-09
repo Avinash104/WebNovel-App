@@ -12,13 +12,13 @@ export async function PATCH(
 
     const body = await req.json()
 
-    const { name } = body
+    const { username } = body
 
     if (!user?.id) {
       return new NextResponse("Unauthenticated", { status: 403 })
     }
 
-    if (!name) {
+    if (!username) {
       return new NextResponse("Name is required", { status: 400 })
     }
 
@@ -41,13 +41,13 @@ export async function PATCH(
         id: params.profileId,
       },
       data: {
-        name,
+        username,
       },
     })
 
     return NextResponse.json(profile)
   } catch (error) {
-    console.log("[CATEGORY_PATCH]", error)
+    console.log("[PROFILE_PATCH]", error)
     return new NextResponse("Internal error", { status: 500 })
   }
 }

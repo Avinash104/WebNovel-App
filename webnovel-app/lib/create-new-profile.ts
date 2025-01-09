@@ -21,3 +21,23 @@ export async function createNewProfile(userId: string) {
   })
   redirect(`/admin/${profile.id}/setup`)
 }
+
+export async function createNewAuthorProfile(userId: string) {
+  const existingProfile = await prismadb.profile.findUnique({
+    where: { id: userId },
+  })
+
+  if (!existingProfile) {
+    redirect("/sign-in")
+  }
+
+  const profile = await prismadb.profile.update({
+    where: {
+      id: userId,
+    },
+    data: {
+      role: prismadb.Role.AUTHOR,
+    },
+  })
+  redirect(`/admin/${profile.id}/setup`)
+}

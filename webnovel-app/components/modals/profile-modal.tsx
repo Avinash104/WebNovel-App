@@ -21,7 +21,7 @@ import { toast } from "react-hot-toast"
 import * as z from "zod"
 
 const formSchema = z.object({
-  name: z.string().min(1),
+  username: z.string().min(1),
 })
 
 export const ProfileModal = () => {
@@ -34,7 +34,7 @@ export const ProfileModal = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      username: "",
     },
   })
 
@@ -71,7 +71,7 @@ export const ProfileModal = () => {
               <form onSubmit={form.handleSubmit(onSubmit)}>
                 <FormField
                   control={form.control}
-                  name="name"
+                  name="username"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Author Name</FormLabel>

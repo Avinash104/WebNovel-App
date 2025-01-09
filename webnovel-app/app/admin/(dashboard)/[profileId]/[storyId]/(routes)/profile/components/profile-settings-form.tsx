@@ -133,7 +133,7 @@ const ProfileSettingsForm: React.FC<ProfileSettingsFormProps> = ({
       </div>
       <Separator />
       <Form {...form}>
-        <form>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <div>
             <FormField
               control={form.control}

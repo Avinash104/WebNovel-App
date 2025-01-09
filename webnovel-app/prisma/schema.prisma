@@ -1,39 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider     = "postgresql"
   url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
-generator client {
-  provider = "prisma-client-js"
+enum Role {
+  READER
+  AUTHOR
 }
 
 model Profile {
-  id           String        @id
-  name         String?       @unique
-  stories      Story[]       @relation("ProfileToStory")
-  paymentLinks PaymentLink[] @relation("ProfileToPaymentLink")
-  store        Store?        @relation("ProfileToStore")
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id              String        @id
+  username        String?       @unique
+  role            Role          @default(READER)
+  stories         Story[]       @relation("ProfileToStory")
+  favoriteStories String[]
+  favoriteAuthors String[]
+  paymentLinks    PaymentLink[] @relation("ProfileToPaymentLink")
+  store           Store?        @relation("ProfileToStore")
+  memberships     Membership[]  @relation("ProfileToMembership")
+  orders          Order[]       @relation("ProfileToOrder")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model Story {
-  id                     String     @id @default(uuid())
-  name                   String?
-  description            String?
-  image                  String?    @default("https://res.cloudinary.com/df9eayrlw/image/upload/v1735992315/story-icon-png-8_wvpzbr.png")
-  chapters               Chapter[]  @relation("StoryToChapter")
-  categories             Category[] @relation("StoryToCategory")
-  tags                   String[]
-  views                  Int        @default(0)
-  subscriptionAllowed    Boolean    @default(false)
-  numberOfLockedChapters Int?
-  subscriptionPrice      Int?
-  profile                Profile    @relation("ProfileToStory", fields: [userId], references: [id])
-  userId                 String
-  createdAt              DateTime   @default(now())
-  updatedAt              DateTime   @updatedAt
+  id                  String            @id @default(uuid())
+  title               String?
+  description         String?
+  image               String?           @default("https://res.cloudinary.com/df9eayrlw/image/upload/v1735992315/story-icon-png-8_wvpzbr.png")
+  chapters            Chapter[]         @relation("StoryToChapter")
+  categories          Category[]        @relation("StoryToCategory")
+  tags                String[]
+  views               Int               @default(0)
+  subscriptionAllowed Boolean           @default(false)
+  membershipLevels    MembershipLevel[] @relation("StoryToMembershipLevel")
+  profile             Profile           @relation("ProfileToStory", fields: [userId], references: [id])
+  userId              String
+  memberships         Membership[]      @relation("StoryToMembership")
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 
   @@index([userId])
 }
@@ -60,7 +70,7 @@ model Chapter {
 model Store {
   id        String      @id @default(uuid())
   storeItem StoreItem[] @relation("StoreToStoreItem")
-  profile   Profile     @relation("ProfileToStore", fields: [profileId], references: [id])
+  profile   Profile     @relation("ProfileToStore", fields: [profileId], references: [id], onDelete: Cascade)
   profileId String      @unique
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
@@ -73,7 +83,7 @@ model StoreItem {
   price       Int
   pdfLink     String
   thumbnail   String?
-  store       Store    @relation("StoreToStoreItem", fields: [storeId], references: [id])
+  store       Store    @relation("StoreToStoreItem", fields: [storeId], references: [id], onDelete: Cascade)
   storeId     String
   createdAt   DateTime @default(now())
 
@@ -83,8 +93,63 @@ model StoreItem {
 model PaymentLink {
   id      String  @id @default(uuid())
   address String
-  profile Profile @relation("ProfileToPaymentLink", fields: [userId], references: [id])
+  profile Profile @relation("ProfileToPaymentLink", fields: [userId], references: [id], onDelete: Cascade)
   userId  String
+
+  @@index([userId])
+}
+
+enum MembershipPeriod {
+  MONTHLY
+  QUATERLY
+  HALFYEARLY
+}
+
+model Membership {
+  id                String           @id @default(uuid())
+  user              Profile          @relation("ProfileToMembership", fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  story             Story            @relation("StoryToMembership", fields: [storyId], references: [id], onDelete: Cascade)
+  storyId           String
+  autoRenew         Boolean          @default(true)
+  membershipLevel   MembershipLevel  @relation("MembershipLevelToMembership", fields: [membershipLevelId], references: [id])
+  membershipLevelId String           @unique
+  membershipPeriod  MembershipPeriod @default(MONTHLY)
+  order             Order?           @relation("MembershipToOrder")
+  subscribedAt      DateTime         @default(now())
+  expiresAt         DateTime
+
+  @@index([userId])
+  @@index([storyId])
+  @@index([membershipLevelId])
+}
+
+enum MembershipTitle {
+  BRONZE
+  SILVER
+  GOLD
+}
+
+model MembershipLevel {
+  id             String          @id @default(uuid())
+  title          MembershipTitle
+  chaptersLocked Int
+  price          Float
+  story          Story           @relation("StoryToMembershipLevel", fields: [storyId], references: [id], onDelete: Cascade)
+  storyId        String          @unique
+  memberships    Membership[]    @relation("MembershipLevelToMembership")
+
+  @@index([storyId])
+}
+
+model Order {
+  id           String      @id @default(uuid())
+  user         Profile     @relation("ProfileToOrder", fields: [userId], references: [id])
+  membership   Membership? @relation("MembershipToOrder", fields: [membershipId], references: [id])
+  membershipId String?     @unique
+  userId       String
+  totalAmount  Float
+  createdAt    DateTime    @default(now())
 
   @@index([userId])
 }

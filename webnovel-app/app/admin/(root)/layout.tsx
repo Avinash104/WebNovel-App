@@ -30,7 +30,7 @@ export default async function SetupLayout({
     redirect(`/admin/${profile.id}/${story.id}/chapters`)
   }
 
-  if (!profile || !profile.name) {
+  if (!profile || !profile.username) {
     await createNewProfile(user?.id as string)
     profile = await prismadb.profile.findUnique({
       where: {

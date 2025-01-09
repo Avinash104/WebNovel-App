@@ -21,6 +21,7 @@ const SettingsPage = async ({
     },
     include: {
       categories: true,
+      membershipLevels: true,
     },
   })
 
