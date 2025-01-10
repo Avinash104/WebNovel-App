@@ -13,7 +13,11 @@ const SetupPage = () => {
     }
   }, [isOpen, onOpen])
 
-  return null
+  return (
+    <div>
+      <p>Loading... </p>
+    </div>
+  )
 }
 
 export default SetupPage

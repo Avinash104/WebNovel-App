@@ -1,4 +1,5 @@
 import prismadb from "@/lib/prismadb"
+import { Role } from "@prisma/client"
 import { redirect } from "next/navigation"
 
 export async function createNewProfile(userId: string) {
@@ -9,17 +10,10 @@ export async function createNewProfile(userId: string) {
   if (!existingProfile) {
     await prismadb.profile.create({
       data: {
-        id: userId, // Use Clerk's userId as Profile ID
+        id: userId,
       },
     })
   }
-
-  const profile = await prismadb.profile.findUnique({
-    where: {
-      id: userId,
-    },
-  })
-  redirect(`/admin/${profile.id}/setup`)
 }
 
 export async function createNewAuthorProfile(userId: string) {
@@ -31,13 +25,12 @@ export async function createNewAuthorProfile(userId: string) {
     redirect("/sign-in")
   }
 
-  const profile = await prismadb.profile.update({
+  await prismadb.profile.update({
     where: {
       id: userId,
     },
     data: {
-      role: prismadb.Role.AUTHOR,
+      role: Role.AUTHOR,
     },
   })
-  redirect(`/admin/${profile.id}/setup`)
 }

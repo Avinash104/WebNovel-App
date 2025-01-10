@@ -1,18 +1,64 @@
-import StorySection from "@/app/(home)/component/story-section"
-import prismadb from "@/lib/prismadb"
-import React from "react"
+"use client"
 
-const HomePage = async () => {
-  const stories = await prismadb.story.findMany({
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      image: true,
-      tags: true,
-      views: true,
-    },
-  })
+import StorySection from "@/app/(home)/component/story-section"
+import { useProfileModal } from "@/hooks/use-profile-modal"
+import { useUser } from "@clerk/nextjs"
+import { Story } from "@prisma/client"
+import axios from "axios"
+import { useEffect, useState } from "react"
+import { toast } from "react-hot-toast"
+
+const HomePage = () => {
+  const onOpen = useProfileModal((state) => state.onOpen)
+  const isOpen = useProfileModal((state) => state.isOpen)
+
+  const [stories, setStories] = useState<Story[]>()
+  const { user } = useUser()
+
+  useEffect(() => {
+    if (user) {
+      const fetchUser = async () => {
+        try {
+          const response = await axios.get(`/api/author-api/profile/${user.id}`)
+          const profile = response.data
+          if (!profile?.username) {
+            if (!isOpen) {
+              onOpen()
+            }
+          }
+        } catch (error) {
+          if (axios.isAxiosError(error)) {
+            toast.error(error.response?.data || "Something went wrong!!")
+          } else {
+            toast.error("Something went wrong!!")
+          }
+        }
+      }
+      fetchUser()
+    }
+  }, [isOpen, onOpen, user])
+
+  useEffect(() => {
+    const fetchStories = async () => {
+      try {
+        const response = await axios.get("api/public-api/stories")
+        const stories = response.data
+        console.log("Fetched stories: ", stories)
+        setStories(stories)
+      } catch (error) {
+        console.error("Error fetching stories:", error)
+        if (axios.isAxiosError(error)) {
+          toast.error(
+            error.response?.data?.message || "Failed to fetch stories."
+          )
+        } else {
+          toast.error("An unexpected error occurred.")
+        }
+      }
+    }
+
+    fetchStories()
+  }, [])
 
   return (
     <div>
@@ -24,7 +70,11 @@ const HomePage = async () => {
           Explore stories and dive into chapters.
         </p>
         <div>
-          <StorySection stories={stories} />
+          {stories?.length ? (
+            <StorySection stories={stories} />
+          ) : (
+            <p>No stories available at the moment.</p>
+          )}
         </div>
       </div>
     </div>

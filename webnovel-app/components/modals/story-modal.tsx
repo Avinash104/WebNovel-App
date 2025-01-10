@@ -55,9 +55,9 @@ export const StoryModal = () => {
       setLoading(true)
       console.log("Submitting form", values)
       const payload = { ...values, tags: selectedTags }
-      const response = await axios.post("/api/stories", payload)
+      const response = await axios.post("/api/author-api/stories", payload)
       window.location.assign(
-        `/admin/${response.data.userId}/${response.data.id}/chapters`
+        `/author/${response.data.userId}/${response.data.id}/chapters`
       )
     } catch (error) {
       if (axios.isAxiosError(error)) {

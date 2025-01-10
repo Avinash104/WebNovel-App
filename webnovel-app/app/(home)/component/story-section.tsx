@@ -11,7 +11,7 @@ interface StorySectionProps {
 const StorySection: React.FC<StorySectionProps> = ({ stories }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {stories.map((story) => (
+      {stories?.map((story) => (
         <Link key={story.id} href={`/stories/${story.id}`}>
           <StoryCard story={story} />
         </Link>

@@ -2,10 +2,13 @@ import MainNav from "@/app/(home)/component/main-nav"
 import Container from "@/app/(home)/component/ui/container"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { UserButton } from "@clerk/nextjs"
+import { currentUser } from "@clerk/nextjs/server"
 import Link from "next/link"
 import React from "react"
 
-const Navbar = () => {
+const Navbar = async () => {
+  const user = await currentUser()
+
   return (
     <div className="border-b">
       <Container>
@@ -16,7 +19,7 @@ const Navbar = () => {
           <MainNav />
           <div className="ml-auto flex items-center space-x-4">
             <ThemeToggle />
-            <UserButton />
+            {user ? <UserButton /> : <Link href={"/sign-in"}>Sign In</Link>}
           </div>
         </div>
       </Container>

@@ -32,21 +32,21 @@ export default function StorySwitcher({
   className,
   items = [],
 }: StorySwitcherProps) {
-  const storeModal = useStoryModal()
+  const storyModal = useStoryModal()
   const params = useParams()
 
   const formattedItems = items.map((item) => ({
     id: item.id,
-    name: item.name,
+    title: item.title,
   }))
 
   const currentStory = formattedItems.find((item) => item.id === params.storyId)
 
   const [open, setOpen] = React.useState(false)
 
-  const onStorySelect = (story: { id: string; name: string }) => {
+  const onStorySelect = (story: { id: string; title: string }) => {
     setOpen(false)
-    window.location.assign(`/admin/${params.profileId}/${story.id}/chapters`)
+    window.location.assign(`/author/${params.profileId}/${story.id}/chapters`)
   }
 
   return (
@@ -61,7 +61,7 @@ export default function StorySwitcher({
           className={cn("w-[200px] justify-between", className)}
         >
           <Store className="mr-2 h-4 w-4" />
-          {currentStory?.name}
+          {currentStory?.title}
           <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -78,7 +78,7 @@ export default function StorySwitcher({
                   className="text-sm"
                 >
                   <Store className="mr-2 h-4 w-4" />
-                  {story.name}
+                  {story.title}
                   <Check
                     className={cn(
                       "ml-auto h-4 w-4",
@@ -97,7 +97,7 @@ export default function StorySwitcher({
               <CommandItem
                 onSelect={() => {
                   setOpen(false)
-                  storeModal.onOpen()
+                  storyModal.onOpen()
                 }}
               >
                 <PlusCircle className="mr-2 h-5 w-5" />

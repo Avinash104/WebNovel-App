@@ -52,7 +52,7 @@ export const ChapterEditModal: React.FC<ChapterEditModalProps> = ({
       try {
         setLoading(true)
         const response = await axios.get(
-          `/api/stories/${storyId}/chapters/${chapterId}`
+          `/api/author-api/stories/${storyId}/chapters/${chapterId}`
         )
         form.reset({
           title: response.data.title || "",
@@ -75,7 +75,10 @@ export const ChapterEditModal: React.FC<ChapterEditModalProps> = ({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setLoading(true)
-      await axios.patch(`/api/stories/${storyId}/chapters/${chapterId}`, values)
+      await axios.patch(
+        `/api/author-api/stories/${storyId}/chapters/${chapterId}`,
+        values
+      )
       handleClose()
       window.location.reload()
       toast.success("Chapter edit successful!!")

@@ -26,7 +26,6 @@ const formSchema = z.object({
 
 export const ProfileModal = () => {
   const params = useParams()
-
   const profileModal = useProfileModal()
 
   const [loading, setLoading] = useState(false)
@@ -41,11 +40,8 @@ export const ProfileModal = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setLoading(true)
-      const response = await axios.patch(
-        `/api/profile/${params.profileId}`,
-        values
-      )
-      window.location.assign(`/admin/${response.data.id}/profile`)
+      await axios.patch(`/api/author-api/profile/${params.profileId}`, values)
+      window.location.assign("/")
     } catch (error) {
       if (axios.isAxiosError(error)) {
         toast.error(error.response?.data || "Something went wrong!!")
