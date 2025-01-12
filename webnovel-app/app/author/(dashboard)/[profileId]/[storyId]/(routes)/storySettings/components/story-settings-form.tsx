@@ -42,7 +42,7 @@ const membershipLevelSchema = z.object({
   price: z
     .number({ invalid_type_error: "Price must be a number" })
     .positive({ message: "Price must be a positive number." })
-    .min(0, { message: "Price must be greater than or equal to 0" }),
+    .min(0, { message: "Price must be greater than 0" }),
 })
 
 const formSchema = z.object({
@@ -66,9 +66,7 @@ const formSchema = z.object({
       message: "Category selection cannot be empty.",
     }),
   subscriptionAllowed: z.boolean(),
-  membershipLevels: z
-    .array(membershipLevelSchema)
-    .min(1, { message: "You must define at least one membership level." }),
+  membershipLevels: z.array(membershipLevelSchema),
 })
 
 type Story = {
@@ -77,7 +75,7 @@ type Story = {
   image?: string
   tags: string[]
   categories?: Category[]
-  subscriptionAllowed?: boolean
+  subscriptionAllowed: boolean
   membershipLevels?: MembershipLevel[]
 }
 
@@ -92,8 +90,9 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
 
   const [open, setOpen] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
-  const [isSubscriptionAllowed, setIsSubscriptionAllowed] =
-    useState<boolean>(false)
+  const [isSubscriptionAllowed, setIsSubscriptionAllowed] = useState<boolean>(
+    initialData.subscriptionAllowed
+  )
   const [selectedTags, setSelectedTags] = useState<string[]>(initialData.tags)
   const [storyCategories, setStoryCategories] = useState<Category[]>([])
 
@@ -102,11 +101,12 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
     defaultValues: {
       ...initialData,
       categories: initialData.categories?.map((cat) => cat.id) || [],
-      membershipLevels: initialData.membershipLevels?.map((level) => ({
-        title: level.title,
-        chaptersLocked: level.chaptersLocked,
-        price: level.price,
-      })) || [{ title: "BRONZE", chaptersLocked: 1, price: 0.99 }],
+      membershipLevels:
+        initialData.membershipLevels?.map((level) => ({
+          title: level.title,
+          chaptersLocked: level.chaptersLocked,
+          price: level.price,
+        })) || [],
     },
   })
 
@@ -139,15 +139,15 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
 
   useEffect(() => {
     console.log("Form Errors:", form.formState.errors)
-  }, [form.formState.errors])
+    console.log("initial data for the story", initialData)
+  }, [form.formState.errors, initialData])
 
   const onSubmit = async (values: StorySettingsFormValues) => {
     try {
       setLoading(true)
       const payload = { ...values, tags: selectedTags }
-      console.log("submitting to storyId", payload)
+      console.log("submitting to", storyId, "payload ", payload)
       await axios.patch(`/api/author-api/stories/${storyId}`, payload)
-      window.location.reload()
       toast.success("Story updated.")
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -275,8 +275,9 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
                     <Checkbox
                       checked={isSubscriptionAllowed}
                       onCheckedChange={() => {
-                        field.onChange(!field.value)
-                        setIsSubscriptionAllowed(field.value)
+                        const newValue = !field.value
+                        field.onChange(newValue)
+                        setIsSubscriptionAllowed(newValue)
                       }}
                     />
                   </FormControl>

@@ -1,5 +1,6 @@
 import prismadb from "@/lib/prismadb"
 import { currentUser } from "@clerk/nextjs/server"
+import { MembershipLevel } from "@prisma/client"
 import { redirect } from "next/navigation"
 import { NextResponse } from "next/server"
 
@@ -11,12 +12,12 @@ export async function PATCH(
     const user = await currentUser()
 
     if (!user) {
-      redirect("/sign-in")
+      return new NextResponse("Unauthenticated", { status: 401 })
     }
 
     const body = await req.json()
     const {
-      name,
+      title,
       description,
       tags,
       image,
@@ -25,69 +26,73 @@ export async function PATCH(
       membershipLevels,
     } = body
 
-    if (!user.id) {
-      return new NextResponse("Unauthenticated", { status: 403 })
-    }
-
-    if (!name) {
-      return new NextResponse("Name is required", { status: 400 })
-    }
-
-    if (!description) {
-      return new NextResponse("Description is required", { status: 400 })
-    }
-
-    if (!tags?.length) {
-      return new NextResponse("Tags are required", { status: 400 })
+    // Basic validations
+    if (!title || !description || !tags?.length) {
+      return new NextResponse("Invalid input data", { status: 400 })
     }
 
     if (!params.storyId) {
       return new NextResponse("Story ID is required", { status: 400 })
     }
 
+    // Check story ownership
     const storyByUserId = await prismadb.story.findUnique({
-      where: {
-        id: params.storyId,
-      },
+      where: { id: params.storyId },
     })
 
     if (!storyByUserId || storyByUserId.userId !== user.id) {
-      return new NextResponse("Unauthorized", { status: 405 })
+      return new NextResponse("Unauthorized", { status: 403 })
     }
 
-    let categoryUpdates = {}
-    if (categories && categories.length > 0) {
-      categoryUpdates = {
-        categories: {
-          set: categories.map((id: string) => ({ id })), // Disconnect all existing relations and connect the provided IDs
-        },
-      }
-    } else {
-      categoryUpdates = {
-        categories: {
-          set: [], // Clear all existing relations if no categories are provided
-        },
-      }
-    }
+    // Prepare categories update logic
+    const categoryUpdates =
+      categories && categories.length > 0
+        ? {
+            categories: {
+              set: categories.map((id: string) => ({ id })), // Update categories
+            },
+          }
+        : {
+            categories: {
+              set: [], // Clear categories if none provided
+            },
+          }
 
-    const story = await prismadb.story.update({
-      where: {
-        id: params.storyId,
-      },
+    const membershipLevelsUpdates =
+      membershipLevels && membershipLevels.length > 0
+        ? {
+            membershipLevels: {
+              deleteMany: {},
+              create: membershipLevels.map((level: MembershipLevel) => ({
+                title: level.title,
+                chaptersLocked: level.chaptersLocked,
+                price: level.price,
+              })),
+            },
+          }
+        : {
+            membershipLevels: {
+              deleteMany: {},
+            },
+          }
+
+    const updatedStory = await prismadb.story.update({
+      where: { id: params.storyId },
       data: {
-        name,
+        title,
         description,
         tags,
         image,
         subscriptionAllowed,
         ...categoryUpdates,
+        ...membershipLevelsUpdates,
       },
     })
 
-    return NextResponse.json(story)
+    return NextResponse.json(updatedStory)
   } catch (error) {
-    console.error("[STORY_PATCH]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    console.error("[STORY_PATCH_ERROR]", error)
+    return new NextResponse("Internal Server Error", { status: 500 })
   }
 }
 
@@ -140,5 +145,22 @@ export async function DELETE(
   } catch (error) {
     console.log("[STORY_DELETE]", error)
     return new NextResponse("Internal error", { status: 500 })
+  }
+}
+
+export async function GET({ params }: { params: { storyId: string } }) {
+  try {
+    const story = await prismadb.story.findUnique({
+      where: {
+        id: params.storyId,
+      },
+      select: {
+        membershipLevels: true,
+      },
+    })
+    return NextResponse.json(story)
+  } catch (error) {
+    console.error("[GET_STORY_MEMBERSHIP_LEVELS_ERROR]", error)
+    return new NextResponse("Internal Server Error", { status: 500 })
   }
 }

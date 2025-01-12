@@ -80,7 +80,6 @@ export const ChapterEditModal: React.FC<ChapterEditModalProps> = ({
         values
       )
       handleClose()
-      window.location.reload()
       toast.success("Chapter edit successful!!")
     } catch (error) {
       if (axios.isAxiosError(error)) {

@@ -101,7 +101,7 @@ model PaymentLink {
 
 enum MembershipPeriod {
   MONTHLY
-  QUATERLY
+  QUARTERLY
   HALFYEARLY
 }
 
@@ -119,7 +119,7 @@ model Membership {
   subscribedAt      DateTime         @default(now())
   expiresAt         DateTime
 
-  @@index([userId])
+  @@unique([userId, storyId])
   @@index([storyId])
   @@index([membershipLevelId])
 }
@@ -136,10 +136,10 @@ model MembershipLevel {
   chaptersLocked Int
   price          Float
   story          Story           @relation("StoryToMembershipLevel", fields: [storyId], references: [id], onDelete: Cascade)
-  storyId        String          @unique
+  storyId        String
   memberships    Membership[]    @relation("MembershipLevelToMembership")
 
-  @@index([storyId])
+  @@unique([storyId, title])
 }
 
 model Order {

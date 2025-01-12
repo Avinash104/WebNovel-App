@@ -19,7 +19,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story }) => {
               className="object-cover"
               width={200}
               height={200}
-              alt={story.name ? "" : "Story Cover"}
+              alt={story.title ? "" : "Story Cover"}
               src={story.image}
             />
           </div>
@@ -31,7 +31,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story }) => {
       </div>
       <div className="text-center">
         <h3 className="text-lg font-semibold text-gray-800 mb-2 truncate">
-          {story.name}
+          {story.title}
         </h3>
         {/* <p className="text-gray-600 text-sm mb-4">
           {story.description?.length > 100 ? (

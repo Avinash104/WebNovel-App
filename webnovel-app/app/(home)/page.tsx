@@ -46,7 +46,6 @@ const HomePage = () => {
         console.log("Fetched stories: ", stories)
         setStories(stories)
       } catch (error) {
-        console.error("Error fetching stories:", error)
         if (axios.isAxiosError(error)) {
           toast.error(
             error.response?.data?.message || "Failed to fetch stories."

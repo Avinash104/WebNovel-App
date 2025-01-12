@@ -26,7 +26,7 @@ const SettingsPage = async ({
   })
 
   if (!story) {
-    redirect("/admin")
+    redirect("/author")
   }
 
   return (

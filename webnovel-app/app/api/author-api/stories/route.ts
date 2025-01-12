@@ -45,23 +45,3 @@ export async function POST(req: Request) {
     return new NextResponse("Internal error", { status: 500 })
   }
 }
-
-export async function GET() {
-  try {
-    // Fetch all stories, regardless of user authentication
-    const stories = await prismadb.story.findMany({
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        image: true,
-        tags: true,
-        views: true,
-      },
-    })
-    return NextResponse.json(stories)
-  } catch (error) {
-    console.error("[GET_STORIES_ERROR]", error)
-    return new NextResponse("Internal Server Error", { status: 500 })
-  }
-}

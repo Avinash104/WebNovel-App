@@ -125,6 +125,12 @@ export const MembershipLevelSelector: React.FC<
                               disabled={loading}
                               placeholder="Number of Chapters Locked"
                               {...chaptersField}
+                              onChange={(e) => {
+                                const value = e.target.value
+                                const numericValue =
+                                  value === "" ? "" : Number(value)
+                                chaptersField.onChange(numericValue)
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -142,10 +148,16 @@ export const MembershipLevelSelector: React.FC<
                           <FormControl>
                             <Input
                               type="number"
-                              step="0.01"
+                              step="0.5"
                               disabled={loading}
                               placeholder="Price"
                               {...priceField}
+                              onChange={(e) => {
+                                const value = e.target.value
+                                const numericValue =
+                                  value === "" ? "" : Number(value)
+                                priceField.onChange(numericValue)
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
