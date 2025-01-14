@@ -112,7 +112,7 @@ model Membership {
   story             Story            @relation("StoryToMembership", fields: [storyId], references: [id], onDelete: Cascade)
   storyId           String
   autoRenew         Boolean          @default(true)
-  membershipLevel   MembershipLevel  @relation("MembershipLevelToMembership", fields: [membershipLevelId], references: [id])
+  membershipLevel   MembershipLevel  @relation("MembershipLevelToMembership", fields: [membershipLevelId], references: [id], onDelete: Cascade)
   membershipLevelId String           @unique
   membershipPeriod  MembershipPeriod @default(MONTHLY)
   order             Order?           @relation("MembershipToOrder")
@@ -138,6 +138,8 @@ model MembershipLevel {
   story          Story           @relation("StoryToMembershipLevel", fields: [storyId], references: [id], onDelete: Cascade)
   storyId        String
   memberships    Membership[]    @relation("MembershipLevelToMembership")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@unique([storyId, title])
 }

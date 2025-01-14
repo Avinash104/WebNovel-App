@@ -14,7 +14,7 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
     },
     include: {
       categories: true,
-      chapters: { orderBy: { createdAt: "desc" } },
+      chapters: { where: { published: true }, orderBy: { createdAt: "desc" } },
       membershipLevels: true,
     },
   })

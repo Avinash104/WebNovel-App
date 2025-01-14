@@ -21,7 +21,11 @@ const SettingsPage = async ({
     },
     include: {
       categories: true,
-      membershipLevels: true,
+      membershipLevels: {
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
     },
   })
 

@@ -1,8 +1,95 @@
 import prismadb from "@/lib/prismadb"
 import { currentUser } from "@clerk/nextjs/server"
 import { MembershipLevel } from "@prisma/client"
+import isEqual from "lodash/isEqual"
 import { redirect } from "next/navigation"
 import { NextResponse } from "next/server"
+
+const updateMembershipLevels = async (
+  storyId: string,
+  membershipLevels: MembershipLevel[]
+) => {
+  console.log("If no membership levels are provided, clear them")
+  if (!membershipLevels || membershipLevels.length === 0) {
+    // If no membership levels are provided, clear them
+    await prismadb.membershipLevel.deleteMany({
+      where: { storyId },
+    })
+    return
+  }
+
+  // Fetch existing membership levels for this story
+  console.log("Fetch existing membership levels for this story")
+  const existingLevels = await prismadb.membershipLevel.findMany({
+    where: { storyId },
+    select: {
+      title: true,
+      chaptersLocked: true,
+      price: true,
+    },
+  })
+
+  console.log("compare the coming membership level with existing")
+  console.log("membership Levels is", membershipLevels)
+  console.log("existing Levels is", existingLevels)
+  if (isEqual(membershipLevels, existingLevels)) {
+    membershipLevels = []
+    return
+  }
+
+  // Prepare update/create/delete operations
+  console.log("Prepare update/create/delete operation")
+
+  const levelsToUpdate = membershipLevels.filter((level) =>
+    existingLevels.some(
+      (existing: MembershipLevel) => existing.title === level.title
+    )
+  )
+  const levelsToCreate = membershipLevels.filter(
+    (level) =>
+      !existingLevels.some(
+        (existing: MembershipLevel) => existing.title === level.title
+      )
+  )
+  const levelsToDelete = existingLevels
+    .filter(
+      (existing: MembershipLevel) =>
+        !membershipLevels.some((level) => existing.title === level.title)
+    )
+    .map((level: MembershipLevel) => level.title)
+
+  console.log("levels to update", levelsToUpdate)
+  console.log("levels to create", levelsToCreate)
+  console.log("levels to delete", levelsToDelete)
+
+  // Perform database operations
+  await Promise.all([
+    // Update existing levels
+    ...levelsToUpdate.map((level) =>
+      prismadb.membershipLevel.update({
+        where: { storyId_title: { storyId, title: level.title } },
+        data: {
+          title: level.title,
+          chaptersLocked: level.chaptersLocked,
+          price: level.price,
+        },
+      })
+    ),
+    // Create new levels
+    prismadb.membershipLevel.createMany({
+      data: levelsToCreate.map((level) => ({
+        title: level.title,
+        chaptersLocked: level.chaptersLocked,
+        price: level.price,
+        storyId,
+      })),
+    }),
+    // Delete removed levels (handle memberships if necessary)
+    prismadb.membershipLevel.deleteMany({
+      where: { storyId, title: { in: levelsToDelete } },
+    }),
+  ])
+}
 
 export async function PATCH(
   req: Request,
@@ -58,24 +145,12 @@ export async function PATCH(
             },
           }
 
-    const membershipLevelsUpdates =
-      membershipLevels && membershipLevels.length > 0
-        ? {
-            membershipLevels: {
-              deleteMany: {},
-              create: membershipLevels.map((level: MembershipLevel) => ({
-                title: level.title,
-                chaptersLocked: level.chaptersLocked,
-                price: level.price,
-              })),
-            },
-          }
-        : {
-            membershipLevels: {
-              deleteMany: {},
-            },
-          }
+    // Update membership levels if provided
+    if (membershipLevels) {
+      await updateMembershipLevels(params.storyId, membershipLevels)
+    }
 
+    // Update story
     const updatedStory = await prismadb.story.update({
       where: { id: params.storyId },
       data: {
@@ -85,7 +160,6 @@ export async function PATCH(
         image,
         subscriptionAllowed,
         ...categoryUpdates,
-        ...membershipLevelsUpdates,
       },
     })
 

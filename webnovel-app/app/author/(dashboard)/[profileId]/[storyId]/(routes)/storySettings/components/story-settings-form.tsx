@@ -146,12 +146,16 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
     try {
       setLoading(true)
       const payload = { ...values, tags: selectedTags }
-      console.log("submitting to", storyId, "payload ", payload)
+
+      console.log("Submitting story:", storyId, "Payload:", payload)
       await axios.patch(`/api/author-api/stories/${storyId}`, payload)
+
       toast.success("Story updated.")
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast.error("Something went wrong.", error.response?.data?.message)
+        toast.error(
+          `Something went wrong. ${error.response?.data?.message || ""}`
+        )
       } else {
         toast.error("Something went wrong.")
       }
