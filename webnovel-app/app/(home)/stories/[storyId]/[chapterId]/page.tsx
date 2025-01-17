@@ -49,11 +49,15 @@ const StoryPage = async ({
     )
   )
 
+  console.log("Max number of early access chapters", maxEarlyAccessChapters)
+
   // Calculate free chapters
   const freeChapters = totalChapters - maxEarlyAccessChapters
+  console.log("free chapters", freeChapters)
 
   // Check if the chapter is free
   const isChapterFree = chapter.sequence <= freeChapters
+  console.log("is free: ", isChapterFree)
 
   let isAuthorized = false
 
@@ -73,7 +77,8 @@ const StoryPage = async ({
 
     if (userMembership) {
       const userEarlyAccessChapters =
-        totalChapters - userMembership.membershipLevel.chaptersLocked
+        freeChapters + userMembership.membershipLevel.chaptersLocked
+
       isAuthorized = chapter.sequence <= userEarlyAccessChapters
     }
   }

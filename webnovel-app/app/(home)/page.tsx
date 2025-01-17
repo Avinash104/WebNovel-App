@@ -1,6 +1,6 @@
 "use client"
 
-import StorySection from "@/app/(home)/component/story-section"
+import StorySection from "@/app/(home)/components/story-section"
 import { useProfileModal } from "@/hooks/use-profile-modal"
 import { useUser } from "@clerk/nextjs"
 import { Story } from "@prisma/client"

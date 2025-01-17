@@ -11,7 +11,6 @@ export async function GET() {
         description: true,
         image: true,
         tags: true,
-        views: true,
       },
     })
     return NextResponse.json(stories)

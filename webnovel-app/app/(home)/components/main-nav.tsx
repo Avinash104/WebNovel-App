@@ -2,9 +2,10 @@
 
 import { usePathname } from "next/navigation"
 import React from "react"
+import { SearchInput } from "./search-input"
 
 interface MainNavProps {
-  data: any
+  // data: any
 }
 
 const MainNav: React.FC<MainNavProps> = ({ data }) => {
@@ -14,7 +15,12 @@ const MainNav: React.FC<MainNavProps> = ({ data }) => {
   //     label: route.name,
   //     active: pathename === ``
   //   }))
-  return <div>MainNav</div>
+  return (
+    <div className="flex items-center justify-center">
+      MainNav
+      <SearchInput />
+    </div>
+  )
 }
 
 export default MainNav

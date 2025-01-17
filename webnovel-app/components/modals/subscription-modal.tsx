@@ -5,15 +5,15 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Modal } from "@/components/ui/modal"
 import { useSubscriptionModal } from "@/hooks/use-subscription-modal"
 import { useUser } from "@clerk/nextjs"
-import { Membership, MembershipLevel, MembershipPeriod } from "@prisma/client"
+import { Membership, MembershipLevel } from "@prisma/client"
 import axios from "axios"
 import { useParams } from "next/navigation"
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { toast } from "react-hot-toast"
 
 interface SubscriptionModalProps {
   storyMembershipLevels: MembershipLevel[]
-  profileMembership: Membership
+  profileMembership: Membership | null
 }
 
 export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
@@ -25,39 +25,49 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   const subscriptionModal = useSubscriptionModal()
 
   const [loading, setLoading] = useState(false)
-  const [selectedLevel, setSelectedLevel] = useState<string | null>(null)
-  const [discountedAmount, setDiscountedAmount] = useState<number>()
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(
+    () => profileMembership?.membershipLevelId || null
+  )
   const [isAutoRenewOn, setIsAutoRenewOn] = useState<boolean>(true)
-  const [period, setPeriod] = useState<string>("MONTHLY")
+  const [period, setPeriod] = useState<string>(
+    () => profileMembership?.membershipPeriod || "MONTHLY"
+  )
 
-  useEffect(() => {
-    console.log("levels:  ", storyMembershipLevels)
-    console.log("selected level: ", selectedLevel)
-    console.log("Auto renew : ", isAutoRenewOn)
-  }, [storyMembershipLevels, selectedLevel, isAutoRenewOn])
+  // Get the index of the user's current membership level
+  let currentLevelIndex: number
+  if (profileMembership) {
+    currentLevelIndex = storyMembershipLevels?.findIndex(
+      (level) => level.id === profileMembership?.membershipLevelId
+    )
+  }
 
-  const onSubmit = async () => {
-    try {
-      setLoading(true)
-      const userId = user?.id
-      const storyId = params.storyId as string
-      if (!userId || !storyId || !selectedLevel || !period) {
-        return toast.error("Something went wrong!!")
-      }
-      const values = { userId, storyId, selectedLevel, isAutoRenewOn, period }
-      console.log("values: ", values)
-      await axios.post("/api/author-api/membership", values)
-      toast.success("Successfully subscribed!!")
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        toast.error("Something went wrong!!", error.response?.data?.message)
-      } else {
-        toast.error("Something went wrong!!")
-      }
-    } finally {
-      setLoading(false)
-      subscriptionModal.onClose()
+  // Restrict selecting lower membership levels
+  const handleLevelSelection = (levelId: string, levelIndex: number) => {
+    if (levelIndex <= currentLevelIndex) {
+      toast.error("You can only upgrade your membership level.")
+      return
     }
+    setSelectedLevel(levelId)
+  }
+
+  // Restrict selecting shorter periods if membership exist for the user
+  const handlePeriodSelection = (selectedPeriod: string) => {
+    const periodsOrder = ["MONTHLY", "QUARTERLY", "HALFYEARLY"]
+
+    if (profileMembership) {
+      const currentPeriodIndex = periodsOrder.indexOf(
+        profileMembership?.membershipPeriod
+      )
+
+      const selectedPeriodIndex = periodsOrder.indexOf(selectedPeriod)
+
+      if (selectedPeriodIndex <= currentPeriodIndex) {
+        toast.error("You can only switch to a longer membership period.")
+        return
+      }
+    }
+
+    setPeriod(selectedPeriod)
   }
 
   const calculatePrice = (period: string, price: number) => {
@@ -68,6 +78,30 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         return (6 * price).toFixed(2)
       default:
         return price.toFixed(2)
+    }
+  }
+
+  const onSubmit = async () => {
+    try {
+      setLoading(true)
+      const userId = user?.id
+      const storyId = params.storyId as string
+      if (!userId || !storyId || !selectedLevel || !period) {
+        return toast.error("Select an option.")
+      }
+      const values = { userId, storyId, selectedLevel, isAutoRenewOn, period }
+      await axios.post("/api/author-api/membership", values)
+      window.location.reload()
+      toast.success("Successfully subscribed!")
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error("Something went wrong!", error.response?.data?.message)
+      } else {
+        toast.error("Something went wrong!")
+      }
+    } finally {
+      setLoading(false)
+      subscriptionModal.onClose()
     }
   }
 
@@ -83,23 +117,19 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           <div className="w-full p-4 space-y-6">
             {/* Membership Levels */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {storyMembershipLevels?.map((level) => (
+              {storyMembershipLevels?.map((level, index) => (
                 <div
                   key={level.id}
-                  onClick={() => setSelectedLevel(level.id)}
+                  onClick={() => handleLevelSelection(level.id, index)}
                   className={`border rounded-lg p-4 cursor-pointer transition-transform transform hover:scale-105 ${
                     selectedLevel === level.id
-                      ? "border-blue-500 bg-blue-100"
+                      ? "border-blue-500 bg-blue-600"
                       : "border-gray-300"
                   }`}
                 >
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {level.title}
-                  </h3>
-                  <p className="text-gray-600">
-                    {calculatePrice(period, level.price)}
-                  </p>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="text-lg font-semibold">{level.title}</h3>
+                  <p className="">${calculatePrice(period, level.price)}</p>
+                  <p className="text-sm">
                     Get early access to {level.chaptersLocked} chapters.
                   </p>
                 </div>
@@ -109,33 +139,33 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             <div className="flex items-center justify-around">
               <div
                 className={`border-2 p-4 rounded-md cursor-pointer ${
-                  period === MembershipPeriod.MONTHLY
-                    ? "border-blue-500 bg-blue-100"
+                  period === "MONTHLY"
+                    ? "border-blue-500 bg-blue-600"
                     : "border-gray-300"
                 }`}
-                onClick={() => setPeriod(MembershipPeriod.MONTHLY)}
+                onClick={() => handlePeriodSelection("MONTHLY")}
               >
-                {MembershipPeriod.MONTHLY}
+                MONTHLY
               </div>
               <div
                 className={`border-2 p-4 rounded-md cursor-pointer ${
-                  period === MembershipPeriod.QUARTERLY
-                    ? "border-blue-500 bg-blue-100"
+                  period === "QUARTERLY"
+                    ? "border-blue-500 bg-blue-600"
                     : "border-gray-300"
                 }`}
-                onClick={() => setPeriod(MembershipPeriod.QUARTERLY)}
+                onClick={() => handlePeriodSelection("QUARTERLY")}
               >
-                {MembershipPeriod.QUARTERLY}
+                QUARTERLY
               </div>
               <div
                 className={`border-2 p-4 rounded-md cursor-pointer ${
-                  period === MembershipPeriod.HALFYEARLY
-                    ? "border-blue-500 bg-blue-100"
+                  period === "HALFYEARLY"
+                    ? "border-blue-500 bg-blue-600"
                     : "border-gray-300"
                 }`}
-                onClick={() => setPeriod(MembershipPeriod.HALFYEARLY)}
+                onClick={() => handlePeriodSelection("HALFYEARLY")}
               >
-                {MembershipPeriod.HALFYEARLY}
+                HALFYEARLY
               </div>
             </div>
 

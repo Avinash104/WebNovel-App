@@ -17,9 +17,7 @@ export function AdminMainNav({ className }: React.HTMLAttributes<HTMLElement>) {
   const params = useParams()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  let routes = []
-
-  routes = [
+  const routes = [
     {
       href: `/author/${params.profileId}/${params.storyId}/profile`,
       label: "Profile",

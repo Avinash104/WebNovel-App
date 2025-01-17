@@ -70,7 +70,7 @@ export const ProfileModal = () => {
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Author Name</FormLabel>
+                      <FormLabel>Select a username</FormLabel>
                       <FormControl>
                         <Input
                           disabled={loading}

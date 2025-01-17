@@ -3,6 +3,42 @@ import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { NextResponse } from "next/server"
 
+const toggleFavoriteStory = async (userId: string, storyId: string) => {
+  try {
+    console.log("user id: ", userId)
+    console.log("user storyId: ", storyId)
+    const profile = await prismadb.profile.findUnique({
+      where: { id: userId },
+      select: { favoriteStories: true },
+    })
+
+    if (!profile) {
+      return new NextResponse("Profile not found.", { status: 403 })
+    }
+
+    let updatedFavoriteStories
+
+    // Check if the stroy is already in the favorites
+    if (profile.favoriteStories.includes(storyId)) {
+      updatedFavoriteStories = profile.favoriteStories.filter(
+        (id: string) => id !== storyId
+      )
+    } else {
+      updatedFavoriteStories = [...profile.favoriteStories, storyId]
+    }
+
+    const updatedProfile = await prismadb.profile.update({
+      where: { id: userId },
+      data: { favoriteStories: updatedFavoriteStories },
+    })
+
+    return NextResponse.json(updatedProfile)
+  } catch (error) {
+    console.error("Error toggling favorite story:", error)
+    throw error
+  }
+}
+
 //there is an issue with Patch..
 //if we try to serch for a profile with the dynamic profile id frm the params
 //it runs into error because profileId comes as 'undefined'
@@ -13,14 +49,12 @@ export async function PATCH(
   try {
     const user = await currentUser()
     const body = await req.json()
-    const { username } = body
+    const { username, storyId } = body
+
+    console.log("request body :", body)
 
     if (!user?.id) {
       return new NextResponse("Unauthenticated", { status: 403 })
-    }
-
-    if (!username) {
-      return new NextResponse("Name is required", { status: 400 })
     }
 
     if (!params.profileId) {
@@ -37,6 +71,13 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 405 })
     }
 
+    console.log("profile :", profileByUserId)
+    console.log("id :", profileByUserId.id)
+    if (storyId) {
+      toggleFavoriteStory(profileByUserId.id, storyId)
+    }
+
+    console.log("user name update route")
     const profile = await prismadb.profile.update({
       where: {
         id: profileByUserId.id,

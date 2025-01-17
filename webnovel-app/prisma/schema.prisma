@@ -16,6 +16,7 @@ enum Role {
 model Profile {
   id              String        @id
   username        String?       @unique
+  image           String        @default("https://res.cloudinary.com/df9eayrlw/image/upload/v1735992315/story-icon-png-8_wvpzbr.png")
   role            Role          @default(READER)
   stories         Story[]       @relation("ProfileToStory")
   favoriteStories String[]
@@ -36,7 +37,6 @@ model Story {
   chapters            Chapter[]         @relation("StoryToChapter")
   categories          Category[]        @relation("StoryToCategory")
   tags                String[]
-  views               Int               @default(0)
   subscriptionAllowed Boolean           @default(false)
   membershipLevels    MembershipLevel[] @relation("StoryToMembershipLevel")
   profile             Profile           @relation("ProfileToStory", fields: [userId], references: [id])
@@ -62,6 +62,7 @@ model Chapter {
   story     Story?   @relation("StoryToChapter", fields: [storyId], references: [id])
   storyId   String
   sequence  Int?
+  views     Int      @default(0)
   createdAt DateTime @default(now())
 
   @@index([storyId])

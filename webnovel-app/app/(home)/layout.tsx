@@ -1,5 +1,5 @@
-import Footer from "@/app/(home)/component/footer"
-import Navbar from "@/app/(home)/component/navbar"
+import Footer from "@/app/(home)/components/footer"
+import Navbar from "@/app/(home)/components/navbar"
 import { createNewProfile } from "@/lib/create-new-profile"
 import prismadb from "@/lib/prismadb"
 import { currentUser } from "@clerk/nextjs/server"

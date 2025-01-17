@@ -15,9 +15,30 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
     include: {
       categories: true,
       chapters: { where: { published: true }, orderBy: { createdAt: "desc" } },
-      membershipLevels: true,
+      membershipLevels: {
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
     },
   })
+
+  const authorProfile = await prismadb.profile.findUnique({
+    where: {
+      id: story.userId,
+    },
+  })
+
+  const author = authorProfile.username
+
+  const totalViewsData = await prismadb.chapter.aggregate({
+    where: { storyId, published: true },
+    _sum: {
+      views: true,
+    },
+  })
+
+  const totalViews = totalViewsData._sum.views || 0
 
   if (!story) {
     return <div>Story not found</div>
@@ -28,6 +49,7 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
   let isFavorited = false
   let isSubscribed = false
   let membership = null
+  let subscriptionLevel = ""
 
   if (user) {
     const userProfile = await prismadb.profile.findUnique({
@@ -35,6 +57,9 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
       include: {
         memberships: {
           where: { storyId },
+          include: {
+            membershipLevel: true,
+          },
         },
       },
     })
@@ -45,6 +70,9 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
       )
       membership = userProfile.memberships[0] || null
       isSubscribed = Boolean(membership)
+
+      subscriptionLevel = membership?.membershipLevel?.title
+      console.log(membership?.membershipLevel?.title)
     }
   }
 
@@ -55,7 +83,10 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
           story={story}
           membership={membership}
           favorited={isFavorited}
-          subscribed={isSubscribed}
+          isSubscribed={isSubscribed}
+          subscriptionLevel={subscriptionLevel}
+          totalViews={totalViews}
+          author={author}
         />
       </div>
       <div>
