@@ -25,7 +25,7 @@ export async function DELETE(
     const store = await prismadb.store.findFirst({
       where: {
         id: storeId,
-        profileId,
+        userId: profileId,
       },
     })
 

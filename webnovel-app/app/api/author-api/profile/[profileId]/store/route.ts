@@ -39,14 +39,14 @@ export async function POST(
 
     const storeByProfileId = await prismadb.store.findUnique({
       where: {
-        profileId,
+        userId: profileId,
       },
     })
 
     if (!storeByProfileId) {
       await prismadb.store.create({
         data: {
-          profileId,
+          userId: profileId,
         },
       })
     }
@@ -88,7 +88,7 @@ export async function GET(
 
     const storeByProfileId = await prismadb.store.findUnique({
       where: {
-        profileId,
+        userId: profileId,
       },
     })
 

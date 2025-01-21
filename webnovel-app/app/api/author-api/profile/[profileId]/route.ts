@@ -1,12 +1,11 @@
 import prismadb from "@/lib/prismadb"
 import { currentUser } from "@clerk/nextjs/server"
+import { Profile } from "@prisma/client"
 import { redirect } from "next/navigation"
 import { NextResponse } from "next/server"
 
 const toggleFavoriteStory = async (userId: string, storyId: string) => {
   try {
-    console.log("user id: ", userId)
-    console.log("user storyId: ", storyId)
     const profile = await prismadb.profile.findUnique({
       where: { id: userId },
       select: { favoriteStories: true },
@@ -39,6 +38,62 @@ const toggleFavoriteStory = async (userId: string, storyId: string) => {
   }
 }
 
+const toggleFollow = async (userId: string, authorUsername: string) => {
+  try {
+    // Fetch the user profile
+    const userProfile = await prismadb.profile.findUnique({
+      where: { id: userId },
+    })
+
+    if (!userProfile) {
+      return new NextResponse("User profile not found.", { status: 404 })
+    }
+
+    // Fetch the author profile, including followers
+    const author = await prismadb.profile.findUnique({
+      where: { username: authorUsername },
+      include: { followers: true },
+    })
+
+    if (!author) {
+      return new NextResponse("Profile to follow not found.", { status: 404 })
+    }
+
+    const isFollowing = author.followers.some(
+      (follower: Profile) => follower.id === userId
+    )
+
+    if (isFollowing) {
+      // Unfollow logic
+      await prismadb.profile.update({
+        where: { id: userId },
+        data: {
+          following: {
+            disconnect: { id: author.id },
+          },
+        },
+      })
+
+      return new NextResponse("Unfollowed successfully.", { status: 200 })
+    }
+
+    // Follow logic
+    await prismadb.profile.update({
+      where: { id: userId },
+      data: {
+        following: {
+          connect: { id: author.id },
+        },
+      },
+    })
+
+    return new NextResponse("Followed successfully.", { status: 200 })
+  } catch (error) {
+    console.error("Error toggling follow:", error)
+    return new NextResponse("An unexpected error occurred.", { status: 500 })
+  }
+}
+
 //there is an issue with Patch..
 //if we try to serch for a profile with the dynamic profile id frm the params
 //it runs into error because profileId comes as 'undefined'
@@ -49,9 +104,7 @@ export async function PATCH(
   try {
     const user = await currentUser()
     const body = await req.json()
-    const { username, storyId } = body
-
-    console.log("request body :", body)
+    const { username, storyId, followingChanged, authorUsername } = body
 
     if (!user?.id) {
       return new NextResponse("Unauthenticated", { status: 403 })
@@ -71,13 +124,14 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 405 })
     }
 
-    console.log("profile :", profileByUserId)
-    console.log("id :", profileByUserId.id)
     if (storyId) {
       toggleFavoriteStory(profileByUserId.id, storyId)
     }
 
-    console.log("user name update route")
+    if (followingChanged) {
+      toggleFollow(profileByUserId.id, authorUsername)
+    }
+
     const profile = await prismadb.profile.update({
       where: {
         id: profileByUserId.id,

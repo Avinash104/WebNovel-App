@@ -20,13 +20,20 @@ model Profile {
   role            Role          @default(READER)
   stories         Story[]       @relation("ProfileToStory")
   favoriteStories String[]
-  favoriteAuthors String[]
+  following       Profile[]     @relation("FollowRelation")
+  followers       Profile[]     @relation("FollowRelation")
+  notifications   String[]
+  reviews         Review[]      @relation("ProfileToReviews")
   paymentLinks    PaymentLink[] @relation("ProfileToPaymentLink")
   store           Store?        @relation("ProfileToStore")
   memberships     Membership[]  @relation("ProfileToMembership")
   orders          Order[]       @relation("ProfileToOrder")
+  profileWall     Comment[]     @relation("ProfileToProfileWall")
+  comments        Comment[]     @relation("ProfileToComments")
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  @@index([username])
 }
 
 model Story {
@@ -34,9 +41,12 @@ model Story {
   title               String
   description         String
   image               String            @default("https://res.cloudinary.com/df9eayrlw/image/upload/v1735992315/story-icon-png-8_wvpzbr.png")
+  stars               Float             @default(0)
   chapters            Chapter[]         @relation("StoryToChapter")
   categories          Category[]        @relation("StoryToCategory")
   tags                String[]
+  reviews             Review[]          @relation("StoryToReviews")
+  comments            Comment[]         @relation("StoryToComments")
   subscriptionAllowed Boolean           @default(false)
   membershipLevels    MembershipLevel[] @relation("StoryToMembershipLevel")
   profile             Profile           @relation("ProfileToStory", fields: [userId], references: [id])
@@ -55,15 +65,16 @@ model Category {
 }
 
 model Chapter {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   title     String
   content   String
-  published Boolean  @default(false)
-  story     Story?   @relation("StoryToChapter", fields: [storyId], references: [id])
+  published Boolean   @default(false)
+  story     Story?    @relation("StoryToChapter", fields: [storyId], references: [id])
   storyId   String
   sequence  Int?
-  views     Int      @default(0)
-  createdAt DateTime @default(now())
+  views     Int       @default(0)
+  commments Comment[] @relation("ChapterToComments")
+  createdAt DateTime  @default(now())
 
   @@index([storyId])
 }
@@ -71,22 +82,23 @@ model Chapter {
 model Store {
   id        String      @id @default(uuid())
   storeItem StoreItem[] @relation("StoreToStoreItem")
-  profile   Profile     @relation("ProfileToStore", fields: [profileId], references: [id], onDelete: Cascade)
-  profileId String      @unique
+  profile   Profile     @relation("ProfileToStore", fields: [userId], references: [id], onDelete: Cascade)
+  userId    String      @unique
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 }
 
 model StoreItem {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String
   description String
   price       Int
   pdfLink     String
   thumbnail   String?
-  store       Store    @relation("StoreToStoreItem", fields: [storeId], references: [id], onDelete: Cascade)
+  store       Store     @relation("StoreToStoreItem", fields: [storeId], references: [id], onDelete: Cascade)
   storeId     String
-  createdAt   DateTime @default(now())
+  comments    Comment[] @relation("StoreItemToComments")
+  createdAt   DateTime  @default(now())
 
   @@index([storeId])
 }
@@ -154,5 +166,61 @@ model Order {
   totalAmount  Float
   createdAt    DateTime    @default(now())
 
+  @@index([userId])
+}
+
+enum CommentType {
+  PROFILE_WALL
+  STORY
+  CHAPTER
+  STORE_ITEM
+}
+
+model Comment {
+  id             String      @id @default(uuid())
+  poster         String
+  content        String
+  commentType    CommentType
+  isReply        Boolean     @default(false)
+  likes          Int         @default(0)
+  likingUsers    String[]
+  dislikes       Int         @default(0)
+  dislikingUsers String[]
+  story          Story?      @relation("StoryToComments", fields: [storyId], references: [id])
+  storyId        String?
+  chapter        Chapter?    @relation("ChapterToComments", fields: [chapterId], references: [id])
+  chapterId      String?
+  user           Profile     @relation("ProfileToComments", fields: [userId], references: [id])
+  userId         String
+  storeItems     StoreItem?  @relation("StoreItemToComments", fields: [storeItemId], references: [id])
+  storeItemId    String?
+  author         Profile?    @relation("ProfileToProfileWall", fields: [authorId], references: [id])
+  authorId       String?
+  parentId       String?
+  parent         Comment?    @relation("CommentToReplies", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  replies        Comment[]   @relation("CommentToReplies")
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([storyId])
+  @@index([chapterId])
+  @@index([userId])
+  @@index([storeItemId])
+  @@index([authorId])
+  @@index([parentId])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  content   String
+  likes     Int      @default(0)
+  story     Story    @relation("StoryToReviews", fields: [storyId], references: [id])
+  storyId   String
+  user      Profile  @relation("ProfileToReviews", fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([storyId])
   @@index([userId])
 }

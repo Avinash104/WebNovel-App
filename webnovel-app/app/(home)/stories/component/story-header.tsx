@@ -32,6 +32,7 @@ interface StoryHeaderProps {
   subscriptionLevel: string | null
   totalViews: number
   author: string
+  isAuthorFollowedByUser: boolean
 }
 const StoryHeader: React.FC<StoryHeaderProps> = ({
   story,
@@ -41,11 +42,15 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
   subscriptionLevel,
   totalViews,
   author,
+  isAuthorFollowedByUser,
 }) => {
   const subscriptionModal = useSubscriptionModal()
   const params = useParams()
 
   const [isFavorited, setIsFavorited] = useState<boolean>(favorited)
+  const [isAuthorFollowed, setIsAuthorFollowed] = useState<boolean>(
+    isAuthorFollowedByUser
+  )
 
   const { user } = useUser()
 
@@ -59,6 +64,28 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
       setIsFavorited(!isFavorited)
       const favoriteStory = { storyId: params.storyId }
       await axios.patch(`/api/author-api/profile/${user.id}`, favoriteStory)
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error("Something went wrong.", error.response?.data?.message)
+      } else {
+        toast.error("Something went wrong.")
+      }
+    }
+  }
+
+  const handleFollow = async () => {
+    if (!user) {
+      toast.error("You need to log in to follow.")
+      return
+    }
+
+    console.log("handle follow")
+
+    try {
+      setIsAuthorFollowed(!isAuthorFollowed)
+      const payload = { followingChanged: true, authorUsername: author }
+      await axios.patch(`/api/author-api/profile/${user.id}`, payload)
+      console.log("sending payload ", payload)
     } catch (error) {
       if (axios.isAxiosError(error)) {
         toast.error("Something went wrong.", error.response?.data?.message)
@@ -150,11 +177,21 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
               </Button>
             </div>
           </div>
-          <Link href={`/${author}`}>{author}</Link>
+          <div className="flex gap-2 items-center justify-start">
+            <Link href={`/${author}`} className="">
+              <span className="text-lg">By </span>
+              <span className="font-bold text-xl text-sky-400"> {author}</span>
+            </Link>
+            <button
+              className="bg-orange-400 hover:bg-orange-500 border-2 hover:scale-105 transform translate-x-0 px-2 rounded-md shadow-md"
+              onClick={handleFollow}
+            >
+              {isAuthorFollowed ? "Followed" : "Follow"}
+            </button>
+          </div>
 
           {/* Description */}
-          <p className="">{story.description}</p>
-
+          <p className="text-lg">{story.description}</p>
           {/* Categories & Tags */}
           <div className="flex flex-wrap flex-col gap-2">
             <div className="flex items-center">
@@ -179,7 +216,6 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
               ))}
             </div>
           </div>
-
           <div className="text-gray-500 text-sm">Views: {totalViews}</div>
         </div>
       </div>

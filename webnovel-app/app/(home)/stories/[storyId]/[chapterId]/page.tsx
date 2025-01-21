@@ -1,7 +1,9 @@
+import CommentSection from "@/app/(home)/components/comment-section"
 import prismadb from "@/lib/prismadb"
 import { currentUser } from "@clerk/nextjs/server"
 import { MembershipLevel } from "@prisma/client"
 import React from "react"
+import ChapterContent from "./component/chapter-content"
 
 const StoryPage = async ({
   params,
@@ -21,6 +23,16 @@ const StoryPage = async ({
       content: true,
       title: true,
       sequence: true, // Using sequence for chapter order
+    },
+  })
+
+  const comments = await prismadb.comment.findMany({
+    where: {
+      commentType: "CHAPTER",
+      chapterId,
+    },
+    include: {
+      replies: true, // Ensure replies are included
     },
   })
 
@@ -94,12 +106,8 @@ const StoryPage = async ({
 
   return (
     <div>
-      <h3>{chapter.title}</h3>
-      <div
-        className="prose max-w-none"
-        dangerouslySetInnerHTML={{ __html: chapter.content }}
-      />
-      <p>{`Chapter ${chapter.sequence} of ${totalChapters}`}</p>
+      <ChapterContent chapter={chapter} totalChapters={totalChapters} />
+      <CommentSection comments={comments} chapterId={chapterId} />
     </div>
   )
 }

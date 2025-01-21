@@ -18,7 +18,7 @@ const UserPage: React.FC<UserPageProps> = async ({ params }) => {
 
   const store = await prismadb.store.findUnique({
     where: {
-      profileId: profile.id,
+      userId: profile.id,
     },
   })
 

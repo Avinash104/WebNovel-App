@@ -1,6 +1,7 @@
+import CommentSection from "@/app/(home)/components/comment-section"
 import prismadb from "@/lib/prismadb"
 import { currentUser } from "@clerk/nextjs/server"
-import { Chapter } from "@prisma/client"
+import { Chapter, Profile } from "@prisma/client"
 import Link from "next/link"
 import React from "react"
 import StoryHeader from "../component/story-header"
@@ -23,10 +24,21 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
     },
   })
 
+  const comments = await prismadb.comment.findMany({
+    where: {
+      commentType: "STORY",
+      storyId,
+    },
+    include: {
+      replies: true, // Ensure replies are included
+    },
+  })
+
   const authorProfile = await prismadb.profile.findUnique({
     where: {
       id: story.userId,
     },
+    include: { followers: true },
   })
 
   const author = authorProfile.username
@@ -50,6 +62,7 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
   let isSubscribed = false
   let membership = null
   let subscriptionLevel = ""
+  let isAuthorFollowedByUser = false
 
   if (user) {
     const userProfile = await prismadb.profile.findUnique({
@@ -72,7 +85,10 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
       isSubscribed = Boolean(membership)
 
       subscriptionLevel = membership?.membershipLevel?.title
-      console.log(membership?.membershipLevel?.title)
+
+      isAuthorFollowedByUser = authorProfile.followers.some(
+        (user: Profile) => user.id === userProfile.id
+      )
     }
   }
 
@@ -87,6 +103,7 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
           subscriptionLevel={subscriptionLevel}
           totalViews={totalViews}
           author={author}
+          isAuthorFollowedByUser={isAuthorFollowedByUser}
         />
       </div>
       <div>
@@ -97,6 +114,9 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
             </Link>
           </div>
         ))}
+      </div>
+      <div>
+        <CommentSection comments={comments} storyId={storyId} />
       </div>
     </>
   )
