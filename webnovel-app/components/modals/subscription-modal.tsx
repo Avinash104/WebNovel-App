@@ -29,9 +29,10 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     () => profileMembership?.membershipLevelId || null
   )
   const [isAutoRenewOn, setIsAutoRenewOn] = useState<boolean>(true)
-  const [period, setPeriod] = useState<string>(
-    () => profileMembership?.membershipPeriod || "MONTHLY"
-  )
+  // Commented out the period selection for now
+  // const [period, setPeriod] = useState<string>(
+  //   () => profileMembership?.membershipPeriod || "MONTHLY"
+  // )
 
   // Get the index of the user's current membership level
   let currentLevelIndex: number
@@ -41,7 +42,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     )
   }
 
-  // Restrict selecting lower membership levels
+  // Restrict selecting lower or same membership levels
   const handleLevelSelection = (levelId: string, levelIndex: number) => {
     if (levelIndex <= currentLevelIndex) {
       toast.error("You can only upgrade your membership level.")
@@ -51,48 +52,59 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   }
 
   // Restrict selecting shorter periods if membership exist for the user
-  const handlePeriodSelection = (selectedPeriod: string) => {
-    const periodsOrder = ["MONTHLY", "QUARTERLY", "HALFYEARLY"]
+  // const handlePeriodSelection = (selectedPeriod: string) => {
+  //   const periodsOrder = ["MONTHLY", "QUARTERLY", "HALFYEARLY"]
 
-    if (profileMembership) {
-      const currentPeriodIndex = periodsOrder.indexOf(
-        profileMembership?.membershipPeriod
-      )
+  //   if (profileMembership) {
+  //     const currentPeriodIndex = periodsOrder.indexOf(
+  //       profileMembership?.membershipPeriod
+  //     )
 
-      const selectedPeriodIndex = periodsOrder.indexOf(selectedPeriod)
+  //     const selectedPeriodIndex = periodsOrder.indexOf(selectedPeriod)
 
-      if (selectedPeriodIndex <= currentPeriodIndex) {
-        toast.error("You can only switch to a longer membership period.")
-        return
-      }
-    }
+  //     if (selectedPeriodIndex <= currentPeriodIndex) {
+  //       toast.error("You can only switch to a longer membership period.")
+  //       return
+  //     }
+  //   }
 
-    setPeriod(selectedPeriod)
-  }
+  //   setPeriod(selectedPeriod)
+  // }
 
-  const calculatePrice = (period: string, price: number) => {
-    switch (period) {
-      case "QUARTERLY":
-        return (3 * price).toFixed(2)
-      case "HALFYEARLY":
-        return (6 * price).toFixed(2)
-      default:
-        return price.toFixed(2)
-    }
-  }
+  // const calculatePrice = (period: string, price: number) => {
+  //   switch (period) {
+  //     case "QUARTERLY":
+  //       return (3 * price).toFixed(2)
+  //     case "HALFYEARLY":
+  //       return (6 * price).toFixed(2)
+  //     default:
+  //       return price.toFixed(2)
+  //   }
+  // }
 
-  const onSubmit = async () => {
+  const handleCheckout = async () => {
     try {
       setLoading(true)
       const userId = user?.id
       const storyId = params.storyId as string
-      if (!userId || !storyId || !selectedLevel || !period) {
+
+      if (!userId || !storyId || !selectedLevel) {
         return toast.error("Select an option.")
       }
-      const values = { userId, storyId, selectedLevel, isAutoRenewOn, period }
-      await axios.post("/api/author-api/membership", values)
-      window.location.reload()
-      toast.success("Successfully subscribed!")
+
+      const values = { userId, storyId, selectedLevel, isAutoRenewOn }
+
+      // Make API request to create Stripe checkout session
+      const { data } = await axios.post(
+        "/api/author-api/stripe/create-subscription",
+        values
+      )
+
+      if (data.sessionUrl) {
+        window.location.href = data.sessionUrl // Redirect user to Stripe Checkout
+      } else {
+        toast.error("Failed to start checkout.")
+      }
     } catch (error) {
       if (axios.isAxiosError(error)) {
         toast.error("Something went wrong!", error.response?.data?.message)
@@ -128,7 +140,8 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
                   }`}
                 >
                   <h3 className="text-lg font-semibold">{level.title}</h3>
-                  <p className="">${calculatePrice(period, level.price)}</p>
+                  {/* <p className="">${calculatePrice(period, level.price)}</p> */}
+                  <p>{level.price}</p>
                   <p className="text-sm">
                     Get early access to {level.chaptersLocked} chapters.
                   </p>
@@ -136,7 +149,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               ))}
             </div>
 
-            <div className="flex items-center justify-around">
+            {/* <div className="flex items-center justify-around">
               <div
                 className={`border-2 p-4 rounded-md cursor-pointer ${
                   period === "MONTHLY"
@@ -167,7 +180,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
               >
                 HALFYEARLY
               </div>
-            </div>
+            </div> */}
 
             <div>
               <Checkbox
@@ -191,8 +204,15 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             >
               Cancel
             </Button>
-            <Button disabled={loading} onClick={onSubmit}>
-              Save Changes
+
+            <Button
+              disabled={
+                loading ||
+                selectedLevel === profileMembership?.membershipLevelId
+              }
+              onClick={handleCheckout}
+            >
+              Checkout
             </Button>
           </div>
         </div>

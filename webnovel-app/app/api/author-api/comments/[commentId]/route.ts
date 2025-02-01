@@ -184,6 +184,7 @@ export async function PATCH(
     const updatedComment = await prismadb.comment.update({
       where: {
         id: comment.id,
+        userId: profile.id,
       },
       data: {
         content,

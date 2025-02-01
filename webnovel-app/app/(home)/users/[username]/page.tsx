@@ -16,34 +16,38 @@ const UserPage: React.FC<UserPageProps> = async ({ params }) => {
     },
   })
 
-  const store = await prismadb.store.findUnique({
-    where: {
-      userId: profile.id,
-    },
-  })
-
+  let store
   let stories
   let storeItems
 
-  if (profile.role === "AUTHOR") {
-    stories = await prismadb.story.findMany({
+  if (profile) {
+    store = await prismadb.store.findUnique({
       where: {
         userId: profile.id,
       },
     })
 
-    storeItems = await prismadb.storeItem.findMany({
-      where: {
-        storeId: store.id,
-      },
-    })
+    if (profile.role === "AUTHOR") {
+      stories = await prismadb.story.findMany({
+        where: {
+          userId: profile.id,
+        },
+      })
+
+      storeItems = await prismadb.storeItem.findMany({
+        where: {
+          storeId: store.id,
+        },
+      })
+    }
   }
+
   return (
     <div className="flex items-center justify-center">
       <Tabs defaultValue="account" className="w-full">
         <TabsList className="w-full">
           <TabsTrigger value="account">Profile Wall</TabsTrigger>
-          {profile.role === "AUTHOR" && (
+          {profile?.role === "AUTHOR" && (
             <TabsTrigger value="password">Works</TabsTrigger>
           )}
           <TabsTrigger value="favs">Favorites</TabsTrigger>

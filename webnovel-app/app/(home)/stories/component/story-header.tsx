@@ -178,7 +178,7 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
             </div>
           </div>
           <div className="flex gap-2 items-center justify-start">
-            <Link href={`/${author}`} className="">
+            <Link href={`/users/${author}`} className="">
               <span className="text-lg">By </span>
               <span className="font-bold text-xl text-sky-400"> {author}</span>
             </Link>

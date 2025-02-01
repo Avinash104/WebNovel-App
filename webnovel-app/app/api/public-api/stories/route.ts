@@ -3,7 +3,6 @@ import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    console.log("We are inside api route")
     const stories = await prismadb.story.findMany({
       select: {
         id: true,

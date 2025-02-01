@@ -14,24 +14,25 @@ enum Role {
 }
 
 model Profile {
-  id              String        @id
-  username        String?       @unique
-  image           String        @default("https://res.cloudinary.com/df9eayrlw/image/upload/v1735992315/story-icon-png-8_wvpzbr.png")
-  role            Role          @default(READER)
-  stories         Story[]       @relation("ProfileToStory")
-  favoriteStories String[]
-  following       Profile[]     @relation("FollowRelation")
-  followers       Profile[]     @relation("FollowRelation")
-  notifications   String[]
-  reviews         Review[]      @relation("ProfileToReviews")
-  paymentLinks    PaymentLink[] @relation("ProfileToPaymentLink")
-  store           Store?        @relation("ProfileToStore")
-  memberships     Membership[]  @relation("ProfileToMembership")
-  orders          Order[]       @relation("ProfileToOrder")
-  profileWall     Comment[]     @relation("ProfileToProfileWall")
-  comments        Comment[]     @relation("ProfileToComments")
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id               String        @id
+  username         String?       @unique
+  image            String        @default("https://res.cloudinary.com/df9eayrlw/image/upload/v1735992315/story-icon-png-8_wvpzbr.png")
+  role             Role          @default(READER)
+  stories          Story[]       @relation("ProfileToStory")
+  favoriteStories  String[]
+  following        Profile[]     @relation("FollowRelation")
+  followers        Profile[]     @relation("FollowRelation")
+  notifications    String[]
+  reviews          Review[]      @relation("ProfileToReviews")
+  stripeCustomerId String?       @unique
+  paymentLinks     PaymentLink[] @relation("ProfileToPaymentLink")
+  store            Store?        @relation("ProfileToStore")
+  memberships      Membership[]  @relation("ProfileToMembership")
+  orders           Order[]       @relation("ProfileToOrder")
+  profileWall      Comment[]     @relation("ProfileToProfileWall")
+  comments         Comment[]     @relation("ProfileToComments")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
   @@index([username])
 }
@@ -98,6 +99,7 @@ model StoreItem {
   store       Store     @relation("StoreToStoreItem", fields: [storeId], references: [id], onDelete: Cascade)
   storeId     String
   comments    Comment[] @relation("StoreItemToComments")
+  order       Order?    @relation("StoreItemToOrder")
   createdAt   DateTime  @default(now())
 
   @@index([storeId])
@@ -130,7 +132,7 @@ model Membership {
   membershipPeriod  MembershipPeriod @default(MONTHLY)
   order             Order?           @relation("MembershipToOrder")
   subscribedAt      DateTime         @default(now())
-  expiresAt         DateTime
+  expiresAt         DateTime?
 
   @@unique([userId, storyId])
   @@index([storyId])
@@ -158,15 +160,25 @@ model MembershipLevel {
 }
 
 model Order {
-  id           String      @id @default(uuid())
-  user         Profile     @relation("ProfileToOrder", fields: [userId], references: [id])
-  membership   Membership? @relation("MembershipToOrder", fields: [membershipId], references: [id])
-  membershipId String?     @unique
-  userId       String
-  totalAmount  Float
-  createdAt    DateTime    @default(now())
+  id             String      @id @default(uuid())
+  user           Profile     @relation("ProfileToOrder", fields: [userId], references: [id])
+  userId         String
+  membership     Membership? @relation("MembershipToOrder", fields: [membershipId], references: [id])
+  membershipId   String?     @unique
+  storyTitle     String?
+  storeItem      StoreItem?  @relation("StoreItemToOrder", fields: [storeItemId], references: [id])
+  storeItemId    String?     @unique
+  storeItemTitle String?
+  phone          String      @default("")
+  address        String      @default("")
+  totalAmount    Float
+  isPaid         Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   @@index([userId])
+  @@index([membershipId])
+  @@index([storeItemId])
 }
 
 enum CommentType {
