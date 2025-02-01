@@ -43,8 +43,8 @@ export const ChapterModal = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setLoading(true)
-      await axios.post(`/api/stories/${storyId}/chapters`, values)
-      window.location.assign(`/admin/${profileId}/${storyId}/chapters`)
+      await axios.post(`/api/author-api/stories/${storyId}/chapters`, values)
+      window.location.assign(`/author/${profileId}/${storyId}/chapters`)
       toast.success("New chapter added!!")
     } catch (error) {
       if (axios.isAxiosError(error)) {

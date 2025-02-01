@@ -1,67 +1,124 @@
-// import { useParams } from "next/navigation"
-
-// const stories = {
-//   "1": { title: "Story One", chapters: ["Chapter 1", "Chapter 2"] },
-//   "2": { title: "Story Two", chapters: ["Chapter A", "Chapter B"] },
-// }
-
-// export default function StoryPage({ params }: { params: { id: string } }) {
-//   const story = stories[params.id]
-
-//   if (!story) {
-//     return notFound()
-//   }
-
-//   return (
-//     <div className="container mx-auto p-4">
-//       <h1 className="text-3xl font-bold mb-4">{story.title}</h1>
-//       <h2 className="text-xl font-semibold mb-2">Chapters</h2>
-//       <ul className="space-y-2">
-//         {story.chapters.map((chapter, index) => (
-//           <li key={index} className="text-gray-700">
-//             {chapter}
-//           </li>
-//         ))}
-//       </ul>
-//     </div>
-//   )
-// }
-
+import CommentSection from "@/app/(home)/components/comment-section"
 import prismadb from "@/lib/prismadb"
-import { Chapter } from "@prisma/client"
+import { currentUser } from "@clerk/nextjs/server"
+import { Chapter, Profile } from "@prisma/client"
 import Link from "next/link"
 import React from "react"
+import StoryHeader from "../component/story-header"
 
 const StoryPage = async ({ params }: { params: { storyId: string } }) => {
-  const storyId = params?.storyId
-  console.log(storyId)
+  const { storyId } = params
+
   const story = await prismadb.story.findUnique({
     where: {
       id: storyId,
     },
     include: {
-      chapters: {
+      categories: true,
+      chapters: { where: { published: true }, orderBy: { createdAt: "desc" } },
+      membershipLevels: {
         orderBy: {
-          createdAt: "desc",
+          createdAt: "asc",
         },
       },
     },
   })
 
+  const comments = await prismadb.comment.findMany({
+    where: {
+      commentType: "STORY",
+      storyId,
+    },
+    include: {
+      replies: true, // Ensure replies are included
+    },
+  })
+
+  const authorProfile = await prismadb.profile.findUnique({
+    where: {
+      id: story.userId,
+    },
+    include: { followers: true },
+  })
+
+  const author = authorProfile.username
+
+  const totalViewsData = await prismadb.chapter.aggregate({
+    where: { storyId, published: true },
+    _sum: {
+      views: true,
+    },
+  })
+
+  const totalViews = totalViewsData._sum.views || 0
+
+  if (!story) {
+    return <div>Story not found</div>
+  }
+
+  const user = await currentUser()
+
+  let isFavorited = false
+  let isSubscribed = false
+  let membership = null
+  let subscriptionLevel = ""
+  let isAuthorFollowedByUser = false
+
+  if (user) {
+    const userProfile = await prismadb.profile.findUnique({
+      where: { id: user.id },
+      include: {
+        memberships: {
+          where: { storyId },
+          include: {
+            membershipLevel: true,
+          },
+        },
+      },
+    })
+
+    if (userProfile) {
+      isFavorited = userProfile.favoriteStories.some(
+        (fav: string) => fav === storyId
+      )
+      membership = userProfile.memberships[0] || null
+      isSubscribed = Boolean(membership)
+
+      subscriptionLevel = membership?.membershipLevel?.title
+
+      isAuthorFollowedByUser = authorProfile.followers.some(
+        (user: Profile) => user.id === userProfile.id
+      )
+    }
+  }
+
   return (
-    <div>
-      {story && (
-        <div>
-          {story.chapters.map((chapter: Chapter) => (
-            <div key={chapter.id}>
-              <Link href={`/stories/${storyId}/${chapter.id}`}>
-                {chapter.title}
-              </Link>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    <>
+      <div>
+        <StoryHeader
+          story={story}
+          membership={membership}
+          favorited={isFavorited}
+          isSubscribed={isSubscribed}
+          subscriptionLevel={subscriptionLevel}
+          totalViews={totalViews}
+          author={author}
+          isAuthorFollowedByUser={isAuthorFollowedByUser}
+        />
+      </div>
+      <div>
+        {story.chapters.map((chapter: Chapter) => (
+          <div key={chapter.id} className="mb-4">
+            <Link href={`/stories/${storyId}/${chapter.id}`}>
+              <p className="text-blue-500 hover:underline">{chapter.title}</p>
+            </Link>
+          </div>
+        ))}
+      </div>
+      <div>
+        <CommentSection comments={comments} storyId={storyId} />
+      </div>
+    </>
   )
 }
 

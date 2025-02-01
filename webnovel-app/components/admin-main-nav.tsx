@@ -17,38 +17,37 @@ export function AdminMainNav({ className }: React.HTMLAttributes<HTMLElement>) {
   const params = useParams()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
-  let routes = []
-
-  routes = [
+  const routes = [
     {
-      href: `/admin/${params.profileId}/${params.storyId}/profile`,
+      href: `/author/${params.profileId}/${params.storyId}/profile`,
       label: "Profile",
       active:
-        pathname === `/admin/${params.profileId}/${params.storyId}/profile`,
+        pathname === `/author/${params.profileId}/${params.storyId}/profile`,
     },
     {
-      href: `/admin/${params.profileId}/${params.storyId}/storySettings`,
+      href: `/author/${params.profileId}/${params.storyId}/storySettings`,
       label: "Story Settings",
       active:
         pathname ===
-        `/admin/${params.profileId}/${params.storyId}/storySettings`,
+        `/author/${params.profileId}/${params.storyId}/storySettings`,
     },
     {
-      href: `/admin/${params.profileId}/${params.storyId}/chapters`,
+      href: `/author/${params.profileId}/${params.storyId}/chapters`,
       label: "Chapters",
       active:
-        pathname === `/admin/${params.profileId}/${params.storyId}/chapters`,
+        pathname === `/author/${params.profileId}/${params.storyId}/chapters`,
     },
     {
-      href: `/admin/${params.profileId}/${params.storyId}/store`,
+      href: `/author/${params.profileId}/${params.storyId}/store`,
       label: "Store",
-      active: pathname === `/admin/${params.profileId}/${params.storyId}/store`,
+      active:
+        pathname === `/author/${params.profileId}/${params.storyId}/store`,
     },
     {
-      href: `/admin/${params.profileId}/${params.storyId}/orders`,
+      href: `/author/${params.profileId}/${params.storyId}/orders`,
       label: "Orders",
       active:
-        pathname === `/admin/${params.profileId}/${params.storyId}/orders`,
+        pathname === `/author/${params.profileId}/${params.storyId}/orders`,
     },
   ]
 
