@@ -76,8 +76,16 @@ model Chapter {
   views     Int       @default(0)
   commments Comment[] @relation("ChapterToComments")
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@index([storyId])
+}
+
+model ViewLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  chapterId String
+  viewedAt  DateTime @default(now()) // Timestamp of when the view happened
 }
 
 model Store {

@@ -1,7 +1,6 @@
+import prismadb from "@/lib/prismadb"
 import { currentUser } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
-
-import prismadb from "@/lib/prismadb"
 
 export async function GET(
   req: Request,

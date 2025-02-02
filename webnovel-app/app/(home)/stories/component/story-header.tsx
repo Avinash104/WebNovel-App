@@ -97,7 +97,7 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
 
   const handleSubscribe = () => {
     if (!user) {
-      toast.error("You need to log in to favorite a story.")
+      toast.error("You need to log in to subscribe to a story.")
       return
     }
     subscriptionModal.onOpen()

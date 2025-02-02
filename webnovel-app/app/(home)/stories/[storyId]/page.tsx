@@ -1,9 +1,10 @@
 import CommentSection from "@/app/(home)/components/comment-section"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import prismadb from "@/lib/prismadb"
 import { currentUser } from "@clerk/nextjs/server"
-import { Chapter, Profile } from "@prisma/client"
-import Link from "next/link"
+import { Profile } from "@prisma/client"
 import React from "react"
+import PublicChapterList from "../component/public-chapter-list"
 import StoryHeader from "../component/story-header"
 
 const StoryPage = async ({ params }: { params: { storyId: string } }) => {
@@ -107,13 +108,24 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
         />
       </div>
       <div>
-        {story.chapters.map((chapter: Chapter) => (
-          <div key={chapter.id} className="mb-4">
-            <Link href={`/stories/${storyId}/${chapter.id}`}>
-              <p className="text-blue-500 hover:underline">{chapter.title}</p>
-            </Link>
-          </div>
-        ))}
+        <Tabs defaultValue="chapters" className="w-full">
+          <TabsList className="w-full h-12">
+            <TabsTrigger value="chapters" className="text-2xl">
+              Chapters
+            </TabsTrigger>
+            <TabsTrigger value="glossary" className="text-2xl">
+              Glossary
+            </TabsTrigger>
+            <TabsTrigger value="reviews" className="text-2xl">
+              Reviews
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="chapters">
+            <PublicChapterList story={story} />
+          </TabsContent>
+          <TabsContent value="glossary">Glossary is here..!</TabsContent>
+          <TabsContent value="reviews"> This is the Review section</TabsContent>
+        </Tabs>
       </div>
       <div>
         <CommentSection comments={comments} storyId={storyId} />

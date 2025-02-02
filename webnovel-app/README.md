@@ -35,7 +35,8 @@ The **Webnovel App** aims to make sharing and monetizing web novels easier and m
 
 ### For Readers:
 
-- **Subscription System**: Subscribe to individual stories and access advanced chapters.
+- **Subscription System with Stripe**: Subscribe to individual stories and access advanced chapters.
+- **Stripe Webhook Implementation**: Subscription and purchases can reply on stripe webhook for payment confirmation, creating a reliable and failsafe method to pay online.
 - **Support Authors**: Buy early access and directly support your favorite authors.
 
 ### General:

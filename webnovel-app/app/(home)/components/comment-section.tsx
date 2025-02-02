@@ -382,7 +382,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 
   return (
     <>
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md pl-8">
+      <div className="p-4 mt-5 bg-white dark:bg-gray-800 rounded-lg shadow-md pl-8">
         <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           Comments
         </h3>
