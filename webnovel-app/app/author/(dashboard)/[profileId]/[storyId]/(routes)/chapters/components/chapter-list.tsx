@@ -65,6 +65,8 @@ export const ChapterList: React.FC<ChapterListProps> = ({ chapters }) => {
         onClose={() => setOpen(false)}
         onConfirm={onDelete}
         loading={loading}
+        title="Are you sure?"
+        description="This action cannot be undone."
       />
       <Table>
         <TableCaption>List of chapters.</TableCaption>
@@ -234,6 +236,8 @@ export const ChapterList: React.FC<ChapterListProps> = ({ chapters }) => {
 //         onClose={() => setOpen(false)}
 //         onConfirm={onDelete}
 //         loading={loading}
+// title="Are you sure?"
+//         description="This action cannot be undone."
 //       />
 //       <DragDropContext onDragEnd={handleDragEnd}>
 //         <Droppable droppableId="chapters">

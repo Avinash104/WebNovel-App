@@ -17,6 +17,7 @@ export async function POST(req: Request) {
       storyId,
       authorId,
       storeItemId,
+      reviewId,
       commentType,
       parentId,
     } = body
@@ -152,6 +153,35 @@ export async function POST(req: Request) {
 
         return NextResponse.json(newReply, { status: 200 })
       }
+
+      if (parentId && reviewId) {
+        console.log("store item reply")
+        newReply = await prismadb.comment.create({
+          data: {
+            poster: profile.username,
+            commentType,
+            content,
+            isReply: true,
+            storeItem: {
+              connect: {
+                id: reviewId,
+              },
+            },
+            user: {
+              connect: {
+                id: user.id,
+              },
+            },
+            parent: {
+              connect: {
+                id: parentId,
+              },
+            },
+          },
+        })
+
+        return NextResponse.json(newReply, { status: 200 })
+      }
     }
 
     let newComment
@@ -242,8 +272,30 @@ export async function POST(req: Request) {
 
       return NextResponse.json(newComment, { status: 200 })
     }
+
+    if (reviewId) {
+      newComment = await prismadb.comment.create({
+        data: {
+          poster: profile.username,
+          commentType,
+          content,
+          storeItem: {
+            connect: {
+              id: reviewId,
+            },
+          },
+          user: {
+            connect: {
+              id: user.id,
+            },
+          },
+        },
+      })
+
+      return NextResponse.json(newComment, { status: 200 })
+    }
   } catch (error) {
-    console.error("[MEMBERSHIP_POST_ERROR]", error.message)
+    console.error("[MEMBERSHIP_POST_ERROR]", error)
     return new NextResponse("Internal Server Error", { status: 500 })
   }
 }

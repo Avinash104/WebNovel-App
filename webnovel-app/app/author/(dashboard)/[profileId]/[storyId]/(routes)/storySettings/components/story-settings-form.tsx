@@ -190,6 +190,8 @@ export const StorySettingsForm: React.FC<StorySettingsFormProps> = ({
         onClose={() => setOpen(false)}
         onConfirm={onDelete}
         loading={loading}
+        title="Are you sure?"
+        description="This action cannot be undone."
       />
       <div className="flex items-center justify-between">
         <Heading

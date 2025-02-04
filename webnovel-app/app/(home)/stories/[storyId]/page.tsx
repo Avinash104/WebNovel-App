@@ -5,6 +5,7 @@ import { currentUser } from "@clerk/nextjs/server"
 import { Profile } from "@prisma/client"
 import React from "react"
 import PublicChapterList from "../component/public-chapter-list"
+import ReviewSection from "../component/review-section"
 import StoryHeader from "../component/story-header"
 
 const StoryPage = async ({ params }: { params: { storyId: string } }) => {
@@ -32,6 +33,15 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
     },
     include: {
       replies: true, // Ensure replies are included
+    },
+  })
+
+  const reviews = await prismadb.review.findMany({
+    where: {
+      storyId,
+    },
+    orderBy: {
+      likes: "desc",
     },
   })
 
@@ -64,6 +74,7 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
   let membership = null
   let subscriptionLevel = ""
   let isAuthorFollowedByUser = false
+  let userHasHundredComments = false
 
   if (user) {
     const userProfile = await prismadb.profile.findUnique({
@@ -90,6 +101,12 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
       isAuthorFollowedByUser = authorProfile.followers.some(
         (user: Profile) => user.id === userProfile.id
       )
+
+      const commentCount = await prismadb.comment.count({
+        where: { userId: userProfile.id },
+      })
+
+      userHasHundredComments = commentCount > 100
     }
   }
 
@@ -108,7 +125,7 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
         />
       </div>
       <div>
-        <Tabs defaultValue="chapters" className="w-full">
+        <Tabs defaultValue="reviews" className="w-full">
           <TabsList className="w-full h-12">
             <TabsTrigger value="chapters" className="text-2xl">
               Chapters
@@ -124,7 +141,14 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
             <PublicChapterList story={story} />
           </TabsContent>
           <TabsContent value="glossary">Glossary is here..!</TabsContent>
-          <TabsContent value="reviews"> This is the Review section</TabsContent>
+          <TabsContent value="reviews">
+            {reviews && (
+              <ReviewSection
+                initialReviews={reviews}
+                userHasHundredComments={userHasHundredComments}
+              />
+            )}
+          </TabsContent>
         </Tabs>
       </div>
       <div>

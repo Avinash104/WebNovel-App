@@ -38,6 +38,7 @@ The **Webnovel App** aims to make sharing and monetizing web novels easier and m
 - **Subscription System with Stripe**: Subscribe to individual stories and access advanced chapters.
 - **Stripe Webhook Implementation**: Subscription and purchases can reply on stripe webhook for payment confirmation, creating a reliable and failsafe method to pay online.
 - **Support Authors**: Buy early access and directly support your favorite authors.
+- **Add/Manage story reviews**: Buy early access and directly support your favorite authors.
 
 ### General:
 
@@ -57,6 +58,8 @@ The **Webnovel App** aims to make sharing and monetizing web novels easier and m
 - **Image & File Uploads**: Cloudinary
 - **Validation**: React Hook Form, Zod
 - **HTTP Requests**: Axios
+- **Subscriptions/Payments**: Stripe
+- **Webhooks for Payment confirmation**: Stripe Webhook
 
 ---
 
@@ -96,9 +99,12 @@ NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=""
 DATABASE_URL=""
+STRIPE_SECRET_KEY=""
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+STRIPE_WEBHOOK_SECRET=""
 ```
 
-Ensure you have the required API keys for **Clerk**, **Cloudinary**, and your **Supabase Database**.
+Ensure you have the required API keys for **Clerk**, **Cloudinary**, **Stripe**, **Stripe Webhook**, and your **Supabase Database**.
 
 ---
 

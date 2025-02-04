@@ -35,6 +35,11 @@ const UserProfileButton = () => {
       active: pathname === `/profile/${user?.id}/favorities`,
     },
     {
+      href: `/profile/${user?.id}/reviews`,
+      label: "Reviews",
+      active: pathname === `/profile/${user?.id}/reviews`,
+    },
+    {
       href: `/profile/${user?.id}/memberships`,
       label: "Memberships",
       active: pathname === `/profile/${user?.id}/memberships`,
