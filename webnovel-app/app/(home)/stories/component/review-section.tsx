@@ -71,8 +71,8 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
         onClose={() => setAlertModalOpen(false)}
         onConfirm={() => setAlertModalOpen(false)}
         loading={loading}
-        title="Alert"
-        description="Your account should be older than a month or you should have posted a 100 comments in order to review this work."
+        title="Review Not Allowed"
+        description="Your account should be older than a month or you should have posted atleast 100 comments in order to review this work."
         noButtons={true}
       />
       <div className="flex items-center justify-between px-6 mb-3">

@@ -4,7 +4,7 @@ const Footer = () => {
   return (
     <footer className="border-t">
       <div className="mx-auto py-10">
-        <p className="text-center text-xs">
+        <p className="text-center text-base">
           &copy; 2025 FakeWebnovel Inc, All rights reserved.
         </p>
       </div>

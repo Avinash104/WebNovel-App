@@ -193,7 +193,78 @@ export async function PATCH(
 
     return NextResponse.json(updatedComment)
   } catch (error) {
-    console.error("[COMMENT_PATCH_ERROR]", error.message)
+    console.error("[COMMENT_PATCH_ERROR]", error)
     return new NextResponse("Internal Server Error", { status: 500 })
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { commentId: string } }
+) {
+  try {
+    const user = await currentUser()
+    const commentId = params?.commentId
+
+    console.log("Deleting comment :", commentId)
+
+    if (!user) {
+      return new NextResponse("Unauthenticated", { status: 403 })
+    }
+
+    if (!commentId) {
+      return new NextResponse("Comment id is required.", {
+        status: 400,
+      })
+    }
+
+    // check if profile exists for the user
+    const profileByUserId = await prismadb.profile.findUnique({
+      where: { id: user.id },
+    })
+
+    if (!profileByUserId) {
+      return new NextResponse("No profile exists.", {
+        status: 400,
+      })
+    }
+
+    // Check authority to delete
+    const comment = await prismadb.comment.findUnique({
+      where: { id: commentId },
+    })
+
+    if (!comment) {
+      return new NextResponse("Comment not found", { status: 404 })
+    }
+
+    console.log("Existing comment: ", comment)
+
+    // Check if user is authorized to delete (owns the comment)
+    if (comment.userId !== profileByUserId.id) {
+      return new NextResponse("Unauthorized", { status: 403 })
+    }
+
+    console.log("reply comment? :", comment.isReply)
+    // Delete all the replies to the comment first
+    if (comment.isReply === false) {
+      await prismadb.comment.deleteMany({
+        where: { parentId: comment.id },
+      })
+    }
+
+    // Delete the comment
+    const deletedComment = await prismadb.comment.delete({
+      where: {
+        id: commentId,
+      },
+    })
+
+    console.log("deleted comment :", deletedComment)
+
+    return NextResponse.json(deletedComment)
+  } catch (error) {
+    console.log("[COMMENT_DELETE]", error)
+    return new NextResponse("Internal error", { status: 500 })
   }
 }

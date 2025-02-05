@@ -45,7 +45,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   // Restrict selecting lower or same membership levels
   const handleLevelSelection = (levelId: string, levelIndex: number) => {
     if (levelIndex <= currentLevelIndex) {
-      toast.error("You can only upgrade your membership level.")
+      toast.error("You can not downupgrade your membership level.")
       return
     }
     setSelectedLevel(levelId)

@@ -56,7 +56,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const replyInputRef = useRef<HTMLInputElement | null>(null) // Reference for the reply input
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState<string>("")
-  const [open, setOpen] = useState<boolean>(false)
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null)
 
   const handleLikes = async (commentId: string, responseType: string) => {
     if (!user) {
@@ -197,11 +197,13 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     }
   }
 
-  const onDelete = async () => {
+  const onDelete = async (commentId: string) => {
     try {
+      console.log("Inside delete function: ", commentId)
       setLoading(true)
-      // await axios.delete(`/api/author-api/comments/${commentId}`)
-      toast.success("Review deleted.")
+      await axios.delete(`/api/author-api/comments/${commentId}`)
+      setComments((prev) => prev.filter((comment) => comment.id !== commentId))
+      toast.success("Comment deleted.")
     } catch (error) {
       if (axios.isAxiosError(error)) {
         toast.error("Something went wrong.", error.response?.data?.message)
@@ -210,7 +212,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       }
     } finally {
       setLoading(false)
-      setOpen(false)
     }
   }
 
@@ -262,11 +263,21 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     setEditingCommentId(null)
     setEditingContent("")
   }
+
+  const onDeleteConfirm = async () => {
+    if (commentToDelete) {
+      await onDelete(commentToDelete)
+      setCommentToDelete(null) // Reset after deletion
+    }
+  }
+
   const renderComments = (comments: Comment[]) => {
-    const topLevelComments = comments.filter((comment) => !comment.isReply)
+    const topLevelComments = comments.filter(
+      (comment) => comment.isReply === false
+    )
 
     return topLevelComments.map((comment) => (
-      <div key={comment.id} className="border-l px-4 py-2 mt-4 border-2">
+      <div key={comment.id} className="px-4 py-2 mt-4">
         <div className="flex items-center justify-between">
           <p className="text-lg">
             <Link
@@ -280,6 +291,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           </p>
           {comment.userId === user?.id && (
             <div className="flex items-center justify-center gap-3">
+              <AlertModal
+                isOpen={commentToDelete === comment.id}
+                onClose={() => setCommentToDelete(null)}
+                onConfirm={onDeleteConfirm}
+                loading={loading}
+                title="Are you sure?"
+                description="This action cannot be undone."
+              />
               <PencilIcon
                 className="h-6 w-6 cursor-pointer text-gray-500"
                 onClick={() =>
@@ -290,7 +309,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                 disabled={loading}
                 variant="destructive"
                 size="sm"
-                onClick={() => setOpen(true)}
+                onClick={() => setCommentToDelete(comment.id)}
               >
                 <Trash className="h-4 w-4" />
               </Button>
@@ -395,15 +414,38 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               key={reply.id}
               className="ml-8 mt-2 pl-4 border-l border-gray-300 dark:border-gray-700"
             >
-              <p className="text-lg">
-                <Link
-                  href={`/${comment.poster}`}
-                  className="text-cyan-500 font-semibold"
-                >
-                  {comment.poster}{" "}
-                </Link>
-                posted
-              </p>
+              <div className="flex items-center justify-start">
+                <p className="text-lg">
+                  <Link
+                    href={`/${comment.poster}`}
+                    className="text-cyan-500 font-semibold"
+                  >
+                    {comment.poster}{" "}
+                  </Link>
+                  posted
+                </p>
+                {reply.userId === user?.id && (
+                  <div className="mx-2">
+                    <AlertModal
+                      isOpen={commentToDelete === reply.id}
+                      onClose={() => setCommentToDelete(null)}
+                      onConfirm={onDeleteConfirm}
+                      loading={loading}
+                      title="Are you sure?"
+                      description="This action cannot be undone."
+                    />
+                    <Button
+                      disabled={loading}
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setCommentToDelete(reply.id)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-center justify-start gap-2">
                 <p className="text-gray-700 dark:text-gray-300">
                   {reply.content}
@@ -427,14 +469,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 
   return (
     <>
-      <AlertModal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        onConfirm={onDelete}
-        loading={loading}
-        title="Are you sure?"
-        description="This action cannot be undone."
-      />
       <div className="p-4 mt-5 bg-white dark:bg-gray-800 rounded-lg shadow-md pl-8">
         <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           Comments
