@@ -37,7 +37,7 @@ const ProfileSidebar = () => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex flex-col bg-slate-200 dark:bg-slate-800 h-screen w-64 p-4 shadow-lg">
+      <div className="hidden md:flex flex-col bg-slate-200 dark:bg-slate-800 h-screen w-64 p-4 shadow-lg rounded-r-lg">
         <div className="space-y-4">
           {items.map((item) => (
             <Link

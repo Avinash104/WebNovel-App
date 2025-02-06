@@ -141,10 +141,6 @@ const StoryPage = async ({
       ? chapters[currentChapterIndex + 1]
       : null
 
-  console.log("current chp index :", currentChapterIndex)
-  console.log("prev chp Id :", prevChapter?.title)
-  console.log("next chp Id :", nextChapter?.title)
-
   // Deny access if not authorized and not a free chapter
   if (!isChapterFree && !isAuthorized) {
     return (

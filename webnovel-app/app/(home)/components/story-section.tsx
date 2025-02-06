@@ -1,12 +1,12 @@
 "use client"
 
-import { Story } from "@prisma/client"
+import { StoryWithViews } from "@/lib/utils"
 import Link from "next/link"
 import React from "react"
 import StoryCard from "./story-card"
 
 interface StorySectionProps {
-  stories: Story[]
+  stories: StoryWithViews[]
 }
 const StorySection: React.FC<StorySectionProps> = ({ stories }) => {
   return (

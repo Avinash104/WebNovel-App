@@ -2,8 +2,8 @@
 
 import StorySection from "@/app/(home)/components/story-section"
 import { useProfileModal } from "@/hooks/use-profile-modal"
+import { StoryWithViews } from "@/lib/utils"
 import { useUser } from "@clerk/nextjs"
-import { Story } from "@prisma/client"
 import axios from "axios"
 import { useEffect, useState } from "react"
 import { toast } from "react-hot-toast"
@@ -12,7 +12,7 @@ const HomePage = () => {
   const onOpen = useProfileModal((state) => state.onOpen)
   const isOpen = useProfileModal((state) => state.isOpen)
 
-  const [stories, setStories] = useState<Story[]>()
+  const [stories, setStories] = useState<StoryWithViews[]>()
   const { user } = useUser()
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const HomePage = () => {
     const fetchStories = async () => {
       try {
         const response = await axios.get("api/public-api/stories")
-        const stories = response.data
+        const stories: StoryWithViews[] = response.data
         console.log("Fetched stories: ", stories)
         setStories(stories)
       } catch (error) {
@@ -65,9 +65,7 @@ const HomePage = () => {
         <h1 className="text-4xl font-bold mb-4">
           Welcome to Public Story Site
         </h1>
-        <p className="text-lg text-gray-700">
-          Explore stories and dive into chapters.
-        </p>
+        <p className="">Explore stories and dive into chapters.</p>
         <div>
           {stories?.length ? (
             <StorySection stories={stories} />

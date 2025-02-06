@@ -3,6 +3,7 @@
 import { AlertModal } from "@/components/modals/alert-modal"
 import { Button } from "@/components/ui/button"
 import { useReviewModal } from "@/hooks/use-review-modal"
+import { pageType } from "@/lib/utils"
 import { useUser } from "@clerk/nextjs"
 import { Comment } from "@prisma/client"
 import React, { useEffect, useState } from "react"
@@ -21,11 +22,13 @@ type Review = {
 }
 interface ReviewSectionProps {
   initialReviews: Review[]
-  userHasHundredComments: boolean
+  page: pageType
+  userHasHundredComments?: boolean
 }
 
 const ReviewSection: React.FC<ReviewSectionProps> = ({
   initialReviews,
+  page,
   userHasHundredComments,
 }) => {
   const { user } = useUser()
@@ -79,11 +82,17 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
         <h3 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
           Reviews
         </h3>
-        <div className="mt-4 flex items-center justify-center gap-4">
-          <Button size="lg" onClick={setReviewModalOpen} className="text-base">
-            Post your own review
-          </Button>
-        </div>
+        {page === pageType.STORY && (
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <Button
+              size="lg"
+              onClick={setReviewModalOpen}
+              className="text-base"
+            >
+              Post your own review
+            </Button>
+          </div>
+        )}
       </div>
       <div className=" px-6 mb-3">
         {reviews?.length > 0 ? (
@@ -102,7 +111,14 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
           ))
         ) : (
           <div>
-            No reviews available for this work. Be the first to review it!
+            {page === pageType.STORY && (
+              <p>
+                No reviews available for this work. Be the first to review it!
+              </p>
+            )}
+            {page === pageType.PROFILE && (
+              <p> You haven&apos;t reviewed any works yet.</p>
+            )}
           </div>
         )}
       </div>

@@ -84,7 +84,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     if (!newComment.trim()) return
 
     if (!user) {
-      toast.error("You have to log in to add a comment.")
+      return toast.error("You have to log in to add a comment.")
     }
 
     setLoading(true)
@@ -123,7 +123,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       setNewComment("")
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data || "Something went wrong!!")
+        toast.error(error.response?.data?.message || "Something went wrong!!")
       } else {
         toast.error("Something went wrong!!")
       }

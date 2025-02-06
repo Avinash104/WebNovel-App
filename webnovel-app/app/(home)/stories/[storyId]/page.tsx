@@ -1,6 +1,7 @@
 import CommentSection from "@/app/(home)/components/comment-section"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import prismadb from "@/lib/prismadb"
+import { pageType } from "@/lib/utils"
 import { currentUser } from "@clerk/nextjs/server"
 import { Profile } from "@prisma/client"
 import React from "react"
@@ -145,6 +146,7 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
             {reviews && (
               <ReviewSection
                 initialReviews={reviews}
+                page={pageType.STORY}
                 userHasHundredComments={userHasHundredComments}
               />
             )}

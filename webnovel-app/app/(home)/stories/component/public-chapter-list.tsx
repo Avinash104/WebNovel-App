@@ -49,7 +49,7 @@ const PublicChapterList: React.FC<PublicChapterListProps> = ({ story }) => {
             href={`/stories/${params.storyId}/${chapter.id}`}
           >
             <p className="text-blue-500 hover:underline">{chapter.title}</p>
-            <p>{new Date(chapter.createdAt).toLocaleString()}</p>
+            <p>{new Date(chapter.createdAt).toLocaleDateString("en-US")}</p>
             <p className="text-left">Views: {chapter.views}</p>
           </Link>
         </div>
