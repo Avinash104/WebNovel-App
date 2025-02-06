@@ -76,8 +76,16 @@ model Chapter {
   views     Int       @default(0)
   commments Comment[] @relation("ChapterToComments")
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@index([storyId])
+}
+
+model ViewLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  chapterId String
+  viewedAt  DateTime @default(now()) // Timestamp of when the view happened
 }
 
 model Store {
@@ -208,8 +216,8 @@ model Comment {
   storeItemId    String?
   author         Profile?    @relation("ProfileToProfileWall", fields: [authorId], references: [id])
   authorId       String?
-  parentId       String?
   parent         Comment?    @relation("CommentToReplies", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  parentId       String?
   replies        Comment[]   @relation("CommentToReplies")
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -224,6 +232,8 @@ model Comment {
 
 model Review {
   id        String   @id @default(uuid())
+  poster    String
+  summary   String
   content   String
   likes     Int      @default(0)
   story     Story    @relation("StoryToReviews", fields: [storyId], references: [id])
@@ -233,6 +243,7 @@ model Review {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([storyId, userId])
   @@index([storyId])
   @@index([userId])
 }

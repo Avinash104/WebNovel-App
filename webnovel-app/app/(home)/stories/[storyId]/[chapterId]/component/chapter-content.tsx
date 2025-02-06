@@ -1,7 +1,9 @@
 "use client"
 
 import { Chapter } from "@prisma/client"
-import React from "react"
+import axios from "axios"
+import { useParams } from "next/navigation"
+import React, { useEffect, useRef } from "react"
 
 interface ChapterContentProps {
   chapter: Chapter
@@ -11,15 +13,23 @@ const ChapterContent: React.FC<ChapterContentProps> = ({
   chapter,
   totalChapters,
 }) => {
+  const params = useParams()
+  const hasViewed = useRef(false)
+
+  useEffect(() => {
+    if (!hasViewed.current) {
+      axios.post(`/api/public-api/chapters/${params.chapterId}/view`)
+    }
+  }, [params.chapterId, params.storyId])
+
   return (
-    <div>
-      <h3>{chapter.title}</h3>
+    <>
       <div
         className="prose max-w-none"
         dangerouslySetInnerHTML={{ __html: chapter.content }}
       />
-      <p>{`Chapter ${chapter.sequence} of ${totalChapters}`}</p>
-    </div>
+      <p className="text-center my-2">{`Chapter ${chapter.sequence} of ${totalChapters}`}</p>
+    </>
   )
 }
 

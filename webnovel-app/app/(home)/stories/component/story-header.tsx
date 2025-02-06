@@ -97,7 +97,7 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
 
   const handleSubscribe = () => {
     if (!user) {
-      toast.error("You need to log in to favorite a story.")
+      toast.error("You need to log in to subscribe to a story.")
       return
     }
     subscriptionModal.onOpen()
@@ -179,8 +179,8 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
           </div>
           <div className="flex gap-2 items-center justify-start">
             <Link href={`/users/${author}`} className="">
-              <span className="text-lg">By </span>
-              <span className="font-bold text-xl text-sky-400"> {author}</span>
+              <span className="">By </span>
+              <span className="font-bold text-sky-400"> {author}</span>
             </Link>
             <button
               className="bg-orange-400 hover:bg-orange-500 border-2 hover:scale-105 transform translate-x-0 px-2 rounded-md shadow-md"
@@ -191,14 +191,14 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
           </div>
 
           {/* Description */}
-          <p className="text-lg">{story.description}</p>
+          <p className="">{story.description}</p>
           {/* Categories & Tags */}
           <div className="flex flex-wrap flex-col gap-2">
             <div className="flex items-center">
               {story?.categories?.map((category) => (
                 <span
                   key={category.id}
-                  className="bg-blue-600 px-2 py-1 rounded-md text-sm mx-2"
+                  className="bg-blue-600 px-2 py-1 rounded-md mx-2"
                 >
                   {category.name}
                 </span>
@@ -209,14 +209,14 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
               {story.tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="bg-green-100 text-green-600 mx-1 px-2 py-1 rounded-md text-sm"
+                  className="bg-green-100 text-green-600 mx-1 px-2 py-1 rounded-md"
                 >
                   #{tag}
                 </span>
               ))}
             </div>
           </div>
-          <div className="text-gray-500 text-sm">Views: {totalViews}</div>
+          <div className="text-gray-500">Views: {totalViews}</div>
         </div>
       </div>
     </>

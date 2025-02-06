@@ -1,5 +1,6 @@
 "use client"
 
+import { AlertModal } from "@/components/modals/alert-modal"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -10,7 +11,7 @@ import {
   LucideThumbsDown,
   LucideThumbsUp,
   PencilIcon,
-  Reply,
+  Trash,
 } from "lucide-react"
 import Link from "next/link"
 import React, { useRef, useState } from "react"
@@ -47,14 +48,15 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     toast.error("No Commnets")
   }
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState<boolean>(false)
   const [comments, setComments] = useState<Comment[]>(initialComments)
-  const [newComment, setNewComment] = useState("")
+  const [newComment, setNewComment] = useState<string>("")
   const [replyContent, setReplyContent] = useState<Record<string, string>>({})
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const replyInputRef = useRef<HTMLInputElement | null>(null) // Reference for the reply input
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState<string>("")
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null)
 
   const handleLikes = async (commentId: string, responseType: string) => {
     if (!user) {
@@ -82,7 +84,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     if (!newComment.trim()) return
 
     if (!user) {
-      toast.error("You have to log in to add a comment.")
+      return toast.error("You have to log in to add a comment.")
     }
 
     setLoading(true)
@@ -121,7 +123,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       setNewComment("")
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data || "Something went wrong!!")
+        toast.error(error.response?.data?.message || "Something went wrong!!")
       } else {
         toast.error("Something went wrong!!")
       }
@@ -195,6 +197,24 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     }
   }
 
+  const onDelete = async (commentId: string) => {
+    try {
+      console.log("Inside delete function: ", commentId)
+      setLoading(true)
+      await axios.delete(`/api/author-api/comments/${commentId}`)
+      setComments((prev) => prev.filter((comment) => comment.id !== commentId))
+      toast.success("Comment deleted.")
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error("Something went wrong.", error.response?.data?.message)
+      } else {
+        toast.error("Something went wrong.")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleReplyButtonClick = (commentId: string) => {
     setReplyingTo(commentId)
     setTimeout(() => {
@@ -243,72 +263,107 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     setEditingCommentId(null)
     setEditingContent("")
   }
+
+  const onDeleteConfirm = async () => {
+    if (commentToDelete) {
+      await onDelete(commentToDelete)
+      setCommentToDelete(null) // Reset after deletion
+    }
+  }
+
   const renderComments = (comments: Comment[]) => {
-    const topLevelComments = comments.filter((comment) => !comment.isReply)
+    const topLevelComments = comments.filter(
+      (comment) => comment.isReply === false
+    )
 
     return topLevelComments.map((comment) => (
-      <div key={comment.id} className="border-l pl-4 mt-4">
-        <p className="text-base">
-          <Link href={`/${comment.poster}`} className="font-semibold">
-            {comment.poster}{" "}
-          </Link>
-          posted
-        </p>
-
-        <div className="flex items-center justify-left">
-          {editingCommentId === comment.id ? (
-            // Edit Input
-            <div className="flex flex-col gap-2 w-full md:w-2/3">
-              <Input
-                value={editingContent}
-                onChange={(e) => setEditingContent(e.target.value)}
-                placeholder="Edit your comment..."
-                className="w-full"
+      <div key={comment.id} className="px-4 py-2 mt-4">
+        <div className="flex items-center justify-between">
+          <p className="text-lg">
+            <Link
+              href={`/${comment.poster}`}
+              className="text-cyan-500 font-semibold"
+            >
+              {comment.poster}{" "}
+            </Link>
+            posted on{" "}
+            <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
+          </p>
+          {comment.userId === user?.id && (
+            <div className="flex items-center justify-center gap-3">
+              <AlertModal
+                isOpen={commentToDelete === comment.id}
+                onClose={() => setCommentToDelete(null)}
+                onConfirm={onDeleteConfirm}
+                loading={loading}
+                title="Are you sure?"
+                description="This action cannot be undone."
               />
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => handleSaveEdit(comment.id)}
-                  disabled={loading}
-                >
-                  Save
-                </Button>
-                <Button
-                  size="sm"
-                  className="mt-2"
-                  onClick={handleCancelEdit}
-                  variant="outline"
-                >
-                  Cancel
-                </Button>
-              </div>
+              <PencilIcon
+                className="h-6 w-6 cursor-pointer text-gray-500"
+                onClick={() =>
+                  handleEditButtonClick(comment.id, comment.content)
+                }
+              />
+              <Button
+                disabled={loading}
+                variant="destructive"
+                size="sm"
+                onClick={() => setCommentToDelete(comment.id)}
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
             </div>
-          ) : (
-            // Display Comment
-            <>
+          )}
+        </div>
+
+        {editingCommentId === comment.id ? (
+          // Edit Input
+          <div className="flex flex-col gap-2 w-full md:w-2/3">
+            <Input
+              value={editingContent}
+              onChange={(e) => setEditingContent(e.target.value)}
+              placeholder="Edit your comment..."
+              className="w-full"
+            />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                className="mt-2"
+                onClick={() => handleSaveEdit(comment.id)}
+                disabled={loading}
+              >
+                Save
+              </Button>
+              <Button
+                size="sm"
+                className="mt-2"
+                onClick={handleCancelEdit}
+                variant="outline"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          // Display Comment
+          <>
+            <div className="flex items-center justify-between">
               <p className="text-gray-900 dark:text-gray-100">
                 {comment.content}
               </p>
-              {comment.userId === user?.id && (
-                <PencilIcon
-                  className="h-6 w-6 cursor-pointer text-gray-500"
-                  onClick={() =>
-                    handleEditButtonClick(comment.id, comment.content)
-                  }
-                />
-              )}
-            </>
-          )}
+            </div>
+          </>
+        )}
 
+        <div className="flex items-center justify-between gap-3">
           <Button
             size="sm"
-            variant="ghost"
             disabled={loading}
-            className="text-blue-600 dark:text-blue-400 h-8 w-8"
+            className="mt-2"
             onClick={() => handleReplyButtonClick(comment.id)}
           >
-            <Reply className="" />
+            Reply
           </Button>
 
           <div className="flex items-center justify-center gap-2">
@@ -359,6 +414,38 @@ const CommentSection: React.FC<CommentSectionProps> = ({
               key={reply.id}
               className="ml-8 mt-2 pl-4 border-l border-gray-300 dark:border-gray-700"
             >
+              <div className="flex items-center justify-start">
+                <p className="text-lg">
+                  <Link
+                    href={`/${comment.poster}`}
+                    className="text-cyan-500 font-semibold"
+                  >
+                    {comment.poster}{" "}
+                  </Link>
+                  posted
+                </p>
+                {reply.userId === user?.id && (
+                  <div className="mx-2">
+                    <AlertModal
+                      isOpen={commentToDelete === reply.id}
+                      onClose={() => setCommentToDelete(null)}
+                      onConfirm={onDeleteConfirm}
+                      loading={loading}
+                      title="Are you sure?"
+                      description="This action cannot be undone."
+                    />
+                    <Button
+                      disabled={loading}
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setCommentToDelete(reply.id)}
+                    >
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-center justify-start gap-2">
                 <p className="text-gray-700 dark:text-gray-300">
                   {reply.content}
@@ -382,11 +469,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 
   return (
     <>
-      <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md pl-8">
+      <div className="p-4 mt-5 bg-white dark:bg-gray-800 rounded-lg shadow-md pl-8">
         <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
           Comments
         </h3>
-        <div className="mt-4">
+        <div className="mt-4 flex items-center justify-between gap-2">
           <Textarea
             className="w-full max-h-[70px]"
             placeholder="Write a comment..."

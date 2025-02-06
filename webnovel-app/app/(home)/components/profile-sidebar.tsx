@@ -1,7 +1,7 @@
 "use client"
 
 import { useUser } from "@clerk/nextjs"
-import { Heart, Home, Inbox, Menu, Star, X } from "lucide-react"
+import { Heart, Home, Inbox, KeyboardIcon, Menu, Star, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import React, { useEffect, useState } from "react"
@@ -13,6 +13,11 @@ const ProfileSidebar = () => {
     { title: "Home", url: `/profile/${user?.id}/home`, icon: Home },
     { title: "Messages", url: `/profile/${user?.id}/messages`, icon: Inbox },
     { title: "Favorites", url: `/profile/${user?.id}/favorites`, icon: Heart },
+    {
+      title: "Reviews",
+      url: `/profile/${user?.id}/reviews`,
+      icon: KeyboardIcon,
+    },
     {
       title: "Memberships",
       url: `/profile/${user?.id}/memberships`,
@@ -32,7 +37,7 @@ const ProfileSidebar = () => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex flex-col bg-slate-200 dark:bg-slate-800 h-screen w-64 p-4 shadow-lg">
+      <div className="hidden md:flex flex-col bg-slate-200 dark:bg-slate-800 h-screen w-64 p-4 shadow-lg rounded-r-lg">
         <div className="space-y-4">
           {items.map((item) => (
             <Link
