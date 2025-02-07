@@ -8,12 +8,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { StoryWithViews } from "@/lib/utils"
+import { Story } from "@prisma/client"
 import Image from "next/image"
 import Link from "next/link"
+import StarRating from "../stories/component/star-rating"
 
 interface StoryCardProps {
-  story: StoryWithViews
+  story: Story
 }
 const StoryCard: React.FC<StoryCardProps> = ({ story }) => {
   return (
@@ -29,7 +30,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story }) => {
           <CardDescription>
             {" "}
             {story?.image ? (
-              <div className="rounded-md overflow-hidden flex items-center justify-center">
+              <div className="h-full rounded-md overflow-hidden flex items-center justify-center">
                 <Image
                   className="object-cover"
                   width={150}
@@ -46,10 +47,19 @@ const StoryCard: React.FC<StoryCardProps> = ({ story }) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Author  */}
           <Link href={`/users/${story.author}`} className="flex">
             <span className="mr-1 font-semibold">By </span>
-            <span className="font-bold text-sky-400"> {story.author}</span>
+            <span className="font-bold text-sky-400 hover:underline">
+              {" "}
+              {story.author}
+            </span>
           </Link>
+
+          {/* Story Ratings */}
+          <StarRating storyId={story.id} currentRating={story.stars} />
+
+          {/* Story Tags  */}
           {story.tags.map((tag, index) => (
             <span
               key={index}
@@ -62,7 +72,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story }) => {
         <CardFooter>
           <div className="w-full flex items-center justify-between font-semibold">
             <p>{new Date(story.createdAt).toLocaleDateString("en-US")}</p>
-            <p className=""> Views {story.totalViews}</p>
+            <p className=""> Views {story.views}</p>
           </div>
         </CardFooter>
       </Card>

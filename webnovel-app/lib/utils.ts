@@ -1,4 +1,3 @@
-import { Story } from "@prisma/client"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -16,9 +15,4 @@ export enum CommentType {
   STORY,
   CHAPTER,
   STORE_ITEM,
-}
-
-export interface StoryWithViews extends Story {
-  totalViews: number
-  author: string
 }

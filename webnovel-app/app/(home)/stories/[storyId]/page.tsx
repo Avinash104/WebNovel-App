@@ -7,6 +7,7 @@ import { Profile } from "@prisma/client"
 import React from "react"
 import PublicChapterList from "../component/public-chapter-list"
 import ReviewSection from "../component/review-section"
+import SimilarStories from "../component/similar-stories"
 import StoryHeader from "../component/story-header"
 
 const StoryPage = async ({ params }: { params: { storyId: string } }) => {
@@ -126,7 +127,7 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
         />
       </div>
       <div>
-        <Tabs defaultValue="reviews" className="w-full">
+        <Tabs defaultValue="chapters" className="w-full">
           <TabsList className="w-full h-12">
             <TabsTrigger value="chapters" className="text-2xl">
               Chapters
@@ -155,6 +156,7 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
       </div>
       <div>
         <CommentSection comments={comments} storyId={storyId} />
+        <SimilarStories categories={story.categories} />
       </div>
     </>
   )

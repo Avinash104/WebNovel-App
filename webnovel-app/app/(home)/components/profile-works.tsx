@@ -2,6 +2,7 @@
 
 import { StoryWithViews } from "@/lib/utils"
 import { StoreItem } from "@prisma/client"
+import Link from "next/link"
 import React from "react"
 import StoryCard from "./story-card"
 
@@ -9,7 +10,6 @@ interface ProfileWorksProps {
   stories: StoryWithViews[] | null
   storeItems: StoreItem[] | null
 }
-
 const ProfileWorks: React.FC<ProfileWorksProps> = ({ stories, storeItems }) => {
   return (
     <div className="px-4 bg-rose-500">
@@ -18,7 +18,9 @@ const ProfileWorks: React.FC<ProfileWorksProps> = ({ stories, storeItems }) => {
       {stories && stories.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {stories.map((story) => (
-            <StoryCard key={story.id} story={story} />
+            <Link key={story.id} href={`/stories/${story.id}`}>
+              <StoryCard key={story.id} story={story} />
+            </Link>
           ))}
         </div>
       ) : (

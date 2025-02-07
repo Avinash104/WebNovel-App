@@ -1,7 +1,6 @@
 import ProfileWorks from "@/app/(home)/components/profile-works"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import prismadb from "@/lib/prismadb"
-import { StoryWithViews } from "@/lib/utils"
 import { Profile, Story } from "@prisma/client"
 import React from "react"
 import CommentSection from "../../components/comment-section"
@@ -19,7 +18,7 @@ const UserPage: React.FC<UserPageProps> = async ({ params }) => {
   })
 
   let store
-  let stories: StoryWithViews[] = []
+  let stories: Story[] = []
   let storeItems
   let comments
 
@@ -31,36 +30,20 @@ const UserPage: React.FC<UserPageProps> = async ({ params }) => {
     })
 
     if (profile.role === "AUTHOR") {
-      stories = await Promise.all(
-        (
-          await prismadb.story.findMany({
-            select: {
-              id: true,
-              title: true,
-              description: true,
-              image: true,
-              tags: true,
-              userId: true,
-              createdAt: true,
-            },
-          })
-        ).map(async (story: Story) => {
-          const totalViewsData = await prismadb.chapter.aggregate({
-            where: { storyId: story.id, published: true },
-            _sum: { views: true },
-          })
-
-          const author = await prismadb.profile.findUnique({
-            where: { id: story.userId },
-          })
-
-          return {
-            ...story,
-            totalViews: totalViewsData._sum.views || 0, // Ensure it's always a number
-            author: author.username,
-          }
-        })
-      )
+      stories = await prismadb.story.findMany({
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          author: true,
+          image: true,
+          stars: true,
+          tags: true,
+          userId: true,
+          createdAt: true,
+          views: true,
+        },
+      })
 
       storeItems = await prismadb.storeItem.findMany({
         where: {
@@ -104,7 +87,7 @@ const UserPage: React.FC<UserPageProps> = async ({ params }) => {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="profileWall">
-            <CommentSection comments={comments} authorId={profile.id} />
+            <CommentSection comments={comments} authorId={profile?.id} />
           </TabsContent>
           <TabsContent value="works">
             {stories.length > 0 && (

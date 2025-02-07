@@ -12,11 +12,15 @@ import Link from "next/link"
 import { useParams } from "next/navigation"
 import React, { useState } from "react"
 import { toast } from "react-hot-toast"
+import StarRating from "./star-rating"
 
 type Story = {
+  id: string
   title: string
   description: string
+  author: string
   image?: string
+  stars: number
   tags: string[]
   views: number
   categories?: Category[]
@@ -30,8 +34,6 @@ interface StoryHeaderProps {
   favorited: boolean
   isSubscribed: boolean
   subscriptionLevel: string | null
-  totalViews: number
-  author: string
   isAuthorFollowedByUser: boolean
 }
 const StoryHeader: React.FC<StoryHeaderProps> = ({
@@ -40,8 +42,6 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
   favorited,
   isSubscribed,
   subscriptionLevel,
-  totalViews,
-  author,
   isAuthorFollowedByUser,
 }) => {
   const subscriptionModal = useSubscriptionModal()
@@ -83,7 +83,7 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
 
     try {
       setIsAuthorFollowed(!isAuthorFollowed)
-      const payload = { followingChanged: true, authorUsername: author }
+      const payload = { followingChanged: true, authorUsername: story.author }
       await axios.patch(`/api/author-api/profile/${user.id}`, payload)
       console.log("sending payload ", payload)
     } catch (error) {
@@ -128,7 +128,7 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
 
       <div className="w-full p-6 shadow-md rounded-lg flex flex-col md:flex-row items-center md:items-start gap-6">
         {/* Image Section */}
-        <div className="w-full md:w-1/3">
+        <div className="w-full h-full md:w-1/3 flex items-center justify-center">
           {story && (
             <Image
               src={
@@ -177,17 +177,23 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
               </Button>
             </div>
           </div>
-          <div className="flex gap-2 items-center justify-start">
-            <Link href={`/users/${author}`} className="">
-              <span className="">By </span>
-              <span className="font-bold text-sky-400"> {author}</span>
-            </Link>
-            <button
-              className="bg-orange-400 hover:bg-orange-500 border-2 hover:scale-105 transform translate-x-0 px-2 rounded-md shadow-md"
-              onClick={handleFollow}
-            >
-              {isAuthorFollowed ? "Followed" : "Follow"}
-            </button>
+          <div className="flex justify-between items-center">
+            <div className="flex gap-2 items-center justify-start">
+              <Link href={`/users/${story.author}`} className="">
+                <span className="font-semibold">By </span>
+                <span className="font-bold text-sky-400 hover:underline">
+                  {" "}
+                  {story.author}
+                </span>
+              </Link>
+              <button
+                className="bg-orange-400 hover:bg-orange-500 border-2 hover:scale-105 transform translate-x-0 px-2 rounded-md shadow-md"
+                onClick={handleFollow}
+              >
+                {isAuthorFollowed ? "Followed" : "Follow"}
+              </button>
+            </div>
+            <StarRating storyId={story.id} currentRating={story.stars} />
           </div>
 
           {/* Description */}
@@ -216,7 +222,7 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
               ))}
             </div>
           </div>
-          <div className="text-gray-500">Views: {totalViews}</div>
+          <div className="text-gray-500">Views: {story.views}</div>
         </div>
       </div>
     </>

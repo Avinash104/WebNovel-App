@@ -31,6 +31,7 @@ model Profile {
   orders           Order[]       @relation("ProfileToOrder")
   profileWall      Comment[]     @relation("ProfileToProfileWall")
   comments         Comment[]     @relation("ProfileToComments")
+  storyRatings     StoryRating[] @relation("ProfileToStoryRating")
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
@@ -39,10 +40,12 @@ model Profile {
 
 model Story {
   id                  String            @id @default(uuid())
+  author              String            @default("author")
   title               String
   description         String
   image               String            @default("https://res.cloudinary.com/df9eayrlw/image/upload/v1735992315/story-icon-png-8_wvpzbr.png")
   stars               Float             @default(0)
+  ratings             StoryRating[]     @relation("StoryToStoryRating")
   chapters            Chapter[]         @relation("StoryToChapter")
   categories          Category[]        @relation("StoryToCategory")
   tags                String[]
@@ -53,10 +56,24 @@ model Story {
   profile             Profile           @relation("ProfileToStory", fields: [userId], references: [id])
   userId              String
   memberships         Membership[]      @relation("StoryToMembership")
+  views               Int               @default(0)
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
   @@index([userId])
+}
+
+model StoryRating {
+  id      String  @id @default(uuid())
+  userId  String
+  storyId String
+  rating  Float   @default(0)
+  profile Profile @relation("ProfileToStoryRating", fields: [userId], references: [id], onDelete: Cascade)
+  story   Story   @relation("StoryToStoryRating", fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storyId])
+  @@index([userId])
+  @@index([storyId])
 }
 
 model Category {
