@@ -10,17 +10,17 @@ import {
 } from "@/components/ui/card"
 import { Story } from "@prisma/client"
 import Image from "next/image"
-import Link from "next/link"
 import StarRating from "../stories/component/star-rating"
 
 interface StoryCardProps {
   story: Story
 }
+
 const StoryCard: React.FC<StoryCardProps> = ({ story }) => {
   return (
     <div
       key={story.id}
-      className="bg-red-400 rounded-lg shadow-lg p-4 hover:shadow-xl transition transform hover:scale-105 max-h-[400px]"
+      className="bg-red-400 rounded-lg shadow-lg p-4 hover:shadow-xl transition transform max-h-[400px] hover:bg-red-300"
     >
       <Card>
         <CardHeader>
@@ -48,19 +48,23 @@ const StoryCard: React.FC<StoryCardProps> = ({ story }) => {
         </CardHeader>
         <CardContent>
           {/* Author  */}
-          <Link href={`/users/${story.author}`} className="flex">
+          {/* Link inside Link tag caused hydration errors. Will fix this issue later. Removed link to author profile for now. */}
+
+          {/* <Link href={`/users/${story.author}`} className="flex"> */}
+          <div className="flex">
             <span className="mr-1 font-semibold">By </span>
             <span className="font-bold text-sky-400 hover:underline">
               {" "}
               {story.author}
             </span>
-          </Link>
+          </div>
+          {/* </Link> */}
 
           {/* Story Ratings */}
           <StarRating storyId={story.id} currentRating={story.stars} />
 
           {/* Story Tags  */}
-          {story.tags.map((tag, index) => (
+          {story?.tags?.map((tag, index) => (
             <span
               key={index}
               className="bg-green-100 text-green-600 mx-1 px-2 py-1 rounded-md"

@@ -212,7 +212,7 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
             </div>
 
             <div>
-              {story.tags.map((tag, index) => (
+              {story?.tags?.map((tag, index) => (
                 <span
                   key={index}
                   className="bg-green-100 text-green-600 mx-1 px-2 py-1 rounded-md"

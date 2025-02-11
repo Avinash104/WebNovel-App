@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import prismadb from "@/lib/prismadb"
 import { pageType } from "@/lib/utils"
 import { currentUser } from "@clerk/nextjs/server"
-import { Profile } from "@prisma/client"
+import { Category, Profile } from "@prisma/client"
 import React from "react"
 import PublicChapterList from "../component/public-chapter-list"
 import ReviewSection from "../component/review-section"
@@ -28,16 +28,18 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
     },
   })
 
+  // Get story comments with replies
   const comments = await prismadb.comment.findMany({
     where: {
       commentType: "STORY",
       storyId,
     },
     include: {
-      replies: true, // Ensure replies are included
+      replies: true,
     },
   })
 
+  // Get story reviews
   const reviews = await prismadb.review.findMany({
     where: {
       storyId,
@@ -53,17 +55,6 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
     },
     include: { followers: true },
   })
-
-  const author = authorProfile.username
-
-  const totalViewsData = await prismadb.chapter.aggregate({
-    where: { storyId, published: true },
-    _sum: {
-      views: true,
-    },
-  })
-
-  const totalViews = totalViewsData._sum.views || 0
 
   if (!story) {
     return <div>Story not found</div>
@@ -112,6 +103,9 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
     }
   }
 
+  // Fetch similar stories
+  const similarStories = await getSimilarStories(storyId)
+
   return (
     <>
       <div>
@@ -121,8 +115,6 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
           favorited={isFavorited}
           isSubscribed={isSubscribed}
           subscriptionLevel={subscriptionLevel}
-          totalViews={totalViews}
-          author={author}
           isAuthorFollowedByUser={isAuthorFollowedByUser}
         />
       </div>
@@ -156,10 +148,64 @@ const StoryPage = async ({ params }: { params: { storyId: string } }) => {
       </div>
       <div>
         <CommentSection comments={comments} storyId={storyId} />
-        <SimilarStories categories={story.categories} />
+        <SimilarStories similarStories={similarStories} />
       </div>
     </>
   )
+}
+
+const getSimilarStories = async (storyId: string) => {
+  try {
+    const currentStory = await prismadb.story.findUnique({
+      where: { id: storyId },
+      select: { categories: true }, // Assuming categories is an array of strings
+    })
+
+    console.log("current story: ", currentStory)
+
+    if (!currentStory || !currentStory.categories.length) return []
+
+    const categoryNames = currentStory.categories.map(
+      (category: Category) => category.name
+    )
+
+    console.log("cat names: ", categoryNames)
+
+    // Fetch stories that share at least one category
+    let similarStories = await prismadb.story.findMany({
+      where: {
+        id: { not: storyId },
+        categories: {
+          some: {
+            name: { in: categoryNames },
+          },
+        },
+      },
+      select: {
+        id: true,
+        author: true,
+        stars: true,
+        title: true,
+        image: true,
+        description: true,
+        categories: true,
+        createdAt: true,
+        views: true,
+      },
+    })
+
+    console.log("similar stories list: ", similarStories)
+
+    // Shuffle results randomly
+    similarStories = similarStories.sort(() => Math.random() - 0.5)
+
+    // Return a limited number (e.g., 5) of similar stories
+    return similarStories.slice(0, 3)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    console.error("Error fetching similar stories.")
+    return []
+  }
 }
 
 export default StoryPage

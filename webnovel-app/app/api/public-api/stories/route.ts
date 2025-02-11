@@ -21,7 +21,7 @@ export async function GET() {
 
     return NextResponse.json(stories)
   } catch (error) {
-    console.error("[GET_PUBLIC _STORIES_ERROR]", error)
+    console.error("[GET_PUBLIC_STORIES_ERROR]", error)
     return new NextResponse("Internal Server Error", { status: 500 })
   }
 }
