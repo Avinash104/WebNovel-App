@@ -5,11 +5,11 @@ import Link from "next/link"
 import React from "react"
 import StoryCard from "./story-card"
 
-interface ProfileWorksProps {
+interface UsersWorksProps {
   stories: Story[] | null
   storeItems: StoreItem[] | null
 }
-const ProfileWorks: React.FC<ProfileWorksProps> = ({ stories, storeItems }) => {
+const UsersWorks: React.FC<UsersWorksProps> = ({ stories, storeItems }) => {
   return (
     <div className="px-4 bg-rose-500">
       <h2 className="my-3 text-3xl font-semibold">Stories</h2>
@@ -37,4 +37,4 @@ const ProfileWorks: React.FC<ProfileWorksProps> = ({ stories, storeItems }) => {
   )
 }
 
-export default ProfileWorks
+export default UsersWorks

@@ -16,6 +16,7 @@ const MembershipsPage = async ({
       subscribedAt: "desc",
     },
   })
+
   return (
     <div className="w-full mt-4">
       {memberships &&
@@ -25,4 +26,5 @@ const MembershipsPage = async ({
     </div>
   )
 }
+
 export default MembershipsPage

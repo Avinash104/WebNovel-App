@@ -1,9 +1,10 @@
-import ProfileWorks from "@/app/(home)/components/profile-works"
+import UsersWorks from "@/app/(home)/components/users-works"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import prismadb from "@/lib/prismadb"
 import { Profile, Story } from "@prisma/client"
 import React from "react"
 import CommentSection from "../../components/comment-section"
+import UsersFavorites from "../../components/users-favorites"
 
 interface UserPageProps {
   params: Profile
@@ -21,6 +22,7 @@ const UserPage: React.FC<UserPageProps> = async ({ params }) => {
   let stories: Story[] = []
   let storeItems
   let comments
+  let favoriteStories
 
   if (profile) {
     store = await prismadb.store.findUnique({
@@ -64,6 +66,14 @@ const UserPage: React.FC<UserPageProps> = async ({ params }) => {
         createdAt: "desc",
       },
     })
+
+    favoriteStories = await prismadb.story.findMany({
+      where: {
+        id: {
+          in: profile?.favoriteStories || [],
+        },
+      },
+    })
   }
 
   return (
@@ -91,10 +101,12 @@ const UserPage: React.FC<UserPageProps> = async ({ params }) => {
           </TabsContent>
           <TabsContent value="works">
             {stories.length > 0 && (
-              <ProfileWorks stories={stories} storeItems={storeItems} />
+              <UsersWorks stories={stories} storeItems={storeItems} />
             )}
           </TabsContent>
-          <TabsContent value="favs">Change your nothing here.</TabsContent>
+          <TabsContent value="favs">
+            <UsersFavorites favoriteStories={favoriteStories} />
+          </TabsContent>
         </Tabs>
       </div>
     </>
