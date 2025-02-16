@@ -15,12 +15,11 @@ const Navbar = async () => {
       <Container>
         <div className="relative px-4 sm:px-6 lg:px-8 flex h-16 items-center ">
           <Link href="/" className="ml-4 flex lg:ml-0 gap-x-2">
-            <p className="font-bold text-xl">Home</p>
+            <p className="font-bold text-2xl">Home</p>
           </Link>
           <MainNav />
           <div className="ml-auto flex items-center space-x-4">
             <ThemeToggle />
-
             {user ? (
               <UserProfileButton />
             ) : (

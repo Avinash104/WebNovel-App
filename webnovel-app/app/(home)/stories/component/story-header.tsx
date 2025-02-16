@@ -164,22 +164,24 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
                   <Heart className="h-4 w-4 bg-slate-100" />
                 )}
               </Button>
-              <Button
-                className={`py-2 px-4 rounded-md font-semibold ${
-                  isSubscribed
-                    ? "bg-gray-300 text-gray-700"
-                    : "bg-green-500 text-white hover:bg-green-600"
-                }`}
-                onClick={handleSubscribe}
-                disabled={subscriptionLevel === "GOLD"}
-              >
-                {handleSubscribeButtonDisplay()}
-              </Button>
+              {story.subscriptionAllowed && (
+                <Button
+                  className={`py-2 px-4 rounded-md font-semibold ${
+                    isSubscribed
+                      ? "bg-gray-300 text-gray-700"
+                      : "bg-green-500 text-white hover:bg-green-600"
+                  }`}
+                  onClick={handleSubscribe}
+                  disabled={subscriptionLevel === "GOLD"}
+                >
+                  {handleSubscribeButtonDisplay()}
+                </Button>
+              )}
             </div>
           </div>
           <div className="flex justify-between items-center">
             <div className="flex gap-2 items-center justify-start">
-              <Link href={`/users/${story.author}`} className="">
+              <Link href={`/users/${story.author}`}>
                 <span className="font-semibold">By </span>
                 <span className="font-bold text-sky-400 hover:underline">
                   {" "}
@@ -206,7 +208,14 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
                   key={category.id}
                   className="bg-blue-600 px-2 py-1 rounded-md mx-2"
                 >
-                  {category.name}
+                  <Link
+                    href={`/search?category=${encodeURIComponent(
+                      category.name
+                    )}`}
+                    className="text-blue-500 hover:underline"
+                  >
+                    <span className="text-white">{category.name}</span>
+                  </Link>
                 </span>
               ))}
             </div>
@@ -217,7 +226,7 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
                   key={index}
                   className="bg-green-100 text-green-600 mx-1 px-2 py-1 rounded-md"
                 >
-                  #{tag}
+                  <Link href={`/search?q=${tag}`}>#{tag}</Link>
                 </span>
               ))}
             </div>

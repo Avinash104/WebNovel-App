@@ -20,7 +20,7 @@ const StoryCard: React.FC<StoryCardProps> = ({ story }) => {
   return (
     <div
       key={story.id}
-      className="bg-red-400 rounded-lg shadow-lg p-4 hover:shadow-xl transition transform max-h-[400px] hover:bg-red-300"
+      className="bg-red-400 rounded-lg shadow-lg p-4 hover:shadow-xl transition transform max-h-[400px] hover:bg-red-400"
     >
       <Card>
         <CardHeader>

@@ -2,8 +2,8 @@
 
 import StorySection from "@/app/(home)/components/story-section"
 import { useProfileModal } from "@/hooks/use-profile-modal"
-import { StoryWithViews } from "@/lib/utils"
 import { useUser } from "@clerk/nextjs"
+import { Story } from "@prisma/client"
 import axios from "axios"
 import { useEffect, useState } from "react"
 import { toast } from "react-hot-toast"
@@ -12,7 +12,7 @@ const HomePage = () => {
   const onOpen = useProfileModal((state) => state.onOpen)
   const isOpen = useProfileModal((state) => state.isOpen)
 
-  const [stories, setStories] = useState<StoryWithViews[]>()
+  const [stories, setStories] = useState<Story[]>()
   const { user } = useUser()
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const HomePage = () => {
     const fetchStories = async () => {
       try {
         const response = await axios.get("api/public-api/stories")
-        const stories: StoryWithViews[] = response.data
+        const stories: Story[] = response.data
         console.log("Fetched stories: ", stories)
         setStories(stories)
       } catch (error) {
