@@ -2,6 +2,7 @@ import UsersWorks from "@/app/(home)/components/users-works"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import prismadb from "@/lib/prismadb"
 import { Profile, Story } from "@prisma/client"
+import { MessageSquare } from "lucide-react"
 import React from "react"
 import CommentSection from "../../components/comment-section"
 import UsersFavorites from "../../components/users-favorites"
@@ -78,7 +79,10 @@ const UserPage: React.FC<UserPageProps> = async ({ params }) => {
 
   return (
     <>
-      <h2 className="text-2xl my-3 font-semibold px-3">{username} Profile</h2>
+      <h2 className="text-2xl my-3 font-semibold px-8 flex items-center justify-between">
+        {username} Profile
+        <MessageSquare className="w-8 h-8" />
+      </h2>
       <div className="flex items-center justify-center">
         <Tabs defaultValue="profileWall" className="w-full">
           <TabsList className="w-full h-12">

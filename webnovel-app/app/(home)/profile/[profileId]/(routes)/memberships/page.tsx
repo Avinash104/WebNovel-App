@@ -1,5 +1,5 @@
+import MembershipSection from "@/app/(home)/components/membership-section"
 import prismadb from "@/lib/prismadb"
-import { Membership } from "@prisma/client"
 import React from "react"
 
 const MembershipsPage = async ({
@@ -15,14 +15,24 @@ const MembershipsPage = async ({
     orderBy: {
       subscribedAt: "desc",
     },
+    include: {
+      story: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+      membershipLevel: {
+        select: {
+          title: true,
+        },
+      },
+    },
   })
 
   return (
     <div className="w-full mt-4">
-      {memberships &&
-        memberships?.map((membership: Membership) => (
-          <div key={membership.id}>{membership.storyId}</div>
-        ))}
+      {memberships && <MembershipSection memberships={memberships} />}
     </div>
   )
 }

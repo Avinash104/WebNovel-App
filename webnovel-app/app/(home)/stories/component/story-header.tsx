@@ -36,6 +36,7 @@ interface StoryHeaderProps {
   subscriptionLevel: string | null
   isAuthorFollowedByUser: boolean
 }
+
 const StoryHeader: React.FC<StoryHeaderProps> = ({
   story,
   membership,
@@ -78,8 +79,6 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
       toast.error("You need to log in to follow.")
       return
     }
-
-    console.log("handle follow")
 
     try {
       setIsAuthorFollowed(!isAuthorFollowed)

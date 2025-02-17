@@ -1,3 +1,4 @@
+import { Membership } from "@prisma/client"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -15,4 +16,14 @@ export enum CommentType {
   STORY,
   CHAPTER,
   STORE_ITEM,
+}
+
+export type ExtendedMembership = Membership & {
+  story: {
+    id: string
+    title: string
+  }
+  membershipLevel: {
+    title: string
+  }
 }
