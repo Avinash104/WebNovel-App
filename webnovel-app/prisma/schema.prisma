@@ -14,26 +14,29 @@ enum Role {
 }
 
 model Profile {
-  id               String        @id
-  username         String?       @unique
-  image            String        @default("https://res.cloudinary.com/df9eayrlw/image/upload/v1735992315/story-icon-png-8_wvpzbr.png")
-  role             Role          @default(READER)
-  stories          Story[]       @relation("ProfileToStory")
+  id               String         @id
+  username         String?        @unique
+  image            String         @default("https://res.cloudinary.com/df9eayrlw/image/upload/v1735992315/story-icon-png-8_wvpzbr.png")
+  role             Role           @default(READER)
+  stories          Story[]        @relation("ProfileToStory")
   favoriteStories  String[]
-  following        Profile[]     @relation("FollowRelation")
-  followers        Profile[]     @relation("FollowRelation")
+  following        Profile[]      @relation("FollowRelation")
+  followers        Profile[]      @relation("FollowRelation")
   notifications    String[]
-  reviews          Review[]      @relation("ProfileToReviews")
-  stripeCustomerId String?       @unique
-  paymentLinks     PaymentLink[] @relation("ProfileToPaymentLink")
-  store            Store?        @relation("ProfileToStore")
-  memberships      Membership[]  @relation("ProfileToMembership")
-  orders           Order[]       @relation("ProfileToOrder")
-  profileWall      Comment[]     @relation("ProfileToProfileWall")
-  comments         Comment[]     @relation("ProfileToComments")
-  storyRatings     StoryRating[] @relation("ProfileToStoryRating")
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  reviews          Review[]       @relation("ProfileToReviews")
+  stripeCustomerId String?        @unique
+  paymentLinks     PaymentLink[]  @relation("ProfileToPaymentLink")
+  store            Store?         @relation("ProfileToStore")
+  memberships      Membership[]   @relation("ProfileToMembership")
+  orders           Order[]        @relation("ProfileToOrder")
+  profileWall      Comment[]      @relation("ProfileToProfileWall")
+  comments         Comment[]      @relation("ProfileToComments")
+  conversations    Conversation[] @relation("ProfileToConversations")
+  messagesSent     Message[]      @relation("ProfileToSentMessages")
+  messagesReceived Message[]      @relation("ProfileToReceivedMessages")
+  storyRatings     StoryRating[]  @relation("ProfileToStoryRating")
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@index([username])
 }
@@ -263,4 +266,28 @@ model Review {
   @@unique([storyId, userId])
   @@index([storyId])
   @@index([userId])
+}
+
+model Conversation {
+  id           String    @id @default(uuid())
+  participants Profile[] @relation("ProfileToConversations")
+  messages     Message[] @relation("ConversationToMessages")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  content        String
+  sender         Profile      @relation("ProfileToSentMessages", fields: [senderId], references: [id])
+  senderId       String
+  receiver       Profile      @relation("ProfileToReceivedMessages", fields: [receiverId], references: [id])
+  receiverId     String
+  conversation   Conversation @relation("ConversationToMessages", fields: [conversationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([receiverId])
 }

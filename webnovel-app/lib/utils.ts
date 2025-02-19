@@ -1,4 +1,4 @@
-import { Membership } from "@prisma/client"
+import { Conversation, Membership, Message, Profile } from "@prisma/client"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -26,4 +26,9 @@ export type ExtendedMembership = Membership & {
   membershipLevel: {
     title: string
   }
+}
+
+export type ExtendedConversation = Conversation & {
+  participants: Profile[]
+  messages: Message[]
 }
