@@ -1,6 +1,7 @@
 import { ChatWindow } from "@/app/(home)/components/chat-window"
 import ConversationList from "@/app/(home)/components/conversation-list"
 import prismadb from "@/lib/prismadb"
+// import { PAGE_SIZE } from "@/lib/utils"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 
@@ -21,16 +22,11 @@ const MessagesPage = async () => {
     orderBy: { updatedAt: "desc" },
     include: {
       participants: true,
-      messages: {
-        orderBy: { createdAt: "asc" },
-      },
     },
   })
 
-  console.log("conversations: ", conversations)
-
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex w-full">
       {/* Sidebar for active conversations */}
       <ConversationList conversations={conversations} />
 

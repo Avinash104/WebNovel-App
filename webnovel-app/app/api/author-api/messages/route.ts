@@ -1,4 +1,5 @@
 import prismadb from "@/lib/prismadb"
+import { PAGE_SIZE } from "@/lib/utils"
 import { currentUser } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 
@@ -73,7 +74,41 @@ export async function POST(req: Request) {
       { status: 201 }
     )
   } catch (error) {
-    console.error("Error sending message:", error)
+    console.error("MESSAGE_POST_ERROR", error)
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    )
+  }
+}
+
+export async function GET(req: Request) {
+  try {
+    console.log("Inside GET")
+    const user = await currentUser()
+    const { searchParams } = new URL(req.url)
+    const conversationId = searchParams.get("conversationId")
+    const page = Number(searchParams.get("page") ?? 0)
+
+    // Block if user trying to send message to themselves
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorised." }, { status: 400 })
+    }
+
+    console.log("params: ", conversationId, page)
+
+    const messages = await prismadb.message.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: "desc" },
+      skip: Number(page) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    })
+
+    console.log("Feteched messages: ", messages)
+
+    return NextResponse.json(messages)
+  } catch (error) {
+    console.error("MESSAGE_GET_ERROR", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
