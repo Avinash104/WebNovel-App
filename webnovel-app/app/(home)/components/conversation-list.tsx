@@ -4,7 +4,7 @@ import { useChatStore } from "@/hooks/use-chat-store"
 import { ExtendedConversation } from "@/lib/utils"
 import { useUser } from "@clerk/nextjs"
 import { Profile } from "@prisma/client"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 
 interface ConversationListProps {
   conversations: ExtendedConversation[]
@@ -39,11 +39,22 @@ const ConversationList: React.FC<ConversationListProps> = ({
     )
   }
 
+  const conversationsWithUsernames = useMemo(
+    () =>
+      conversations?.map((conversation) => ({
+        ...conversation,
+        otherUsername: conversation.participants.find(
+          (p: Profile) => p.id !== user?.id
+        )?.username,
+      })),
+    [conversations, user?.id]
+  )
+
   return (
     <div className="w-1/3 border-r border-gray-300 p-4 overflow-y-auto">
       <h2 className="text-xl font-semibold mb-4">Conversations</h2>
       <ul>
-        {conversations?.map((conversation: ExtendedConversation) => (
+        {conversationsWithUsernames?.map((conversation) => (
           <li
             key={conversation.id}
             className={`p-2 cursor-pointer rounded-md ${
@@ -53,10 +64,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
             }`}
             onClick={() => onConversationSelection(conversation)}
           >
-            {
-              conversation.participants.find((p: Profile) => p.id !== user?.id)
-                ?.username
-            }
+            {conversation.otherUsername || "Loading..."}
           </li>
         ))}
       </ul>
