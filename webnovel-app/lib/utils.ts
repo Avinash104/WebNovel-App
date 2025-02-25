@@ -20,6 +20,13 @@ export enum CommentType {
   STORE_ITEM,
 }
 
+export enum MessageDeliveryStateType {
+  DRAFT,
+  SENT,
+  DELIVERED,
+  READ,
+}
+
 export type ExtendedMembership = Membership & {
   story: {
     id: string

@@ -14,29 +14,30 @@ enum Role {
 }
 
 model Profile {
-  id               String         @id
-  username         String?        @unique
-  image            String         @default("https://res.cloudinary.com/df9eayrlw/image/upload/v1735992315/story-icon-png-8_wvpzbr.png")
-  role             Role           @default(READER)
-  stories          Story[]        @relation("ProfileToStory")
-  favoriteStories  String[]
-  following        Profile[]      @relation("FollowRelation")
-  followers        Profile[]      @relation("FollowRelation")
-  notifications    String[]
-  reviews          Review[]       @relation("ProfileToReviews")
-  stripeCustomerId String?        @unique
-  paymentLinks     PaymentLink[]  @relation("ProfileToPaymentLink")
-  store            Store?         @relation("ProfileToStore")
-  memberships      Membership[]   @relation("ProfileToMembership")
-  orders           Order[]        @relation("ProfileToOrder")
-  profileWall      Comment[]      @relation("ProfileToProfileWall")
-  comments         Comment[]      @relation("ProfileToComments")
-  conversations    Conversation[] @relation("ProfileToConversations")
-  messagesSent     Message[]      @relation("ProfileToSentMessages")
-  messagesReceived Message[]      @relation("ProfileToReceivedMessages")
-  storyRatings     StoryRating[]  @relation("ProfileToStoryRating")
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id                      String                    @id
+  username                String?                   @unique
+  image                   String                    @default("https://res.cloudinary.com/df9eayrlw/image/upload/v1735992315/story-icon-png-8_wvpzbr.png")
+  role                    Role                      @default(READER)
+  stories                 Story[]                   @relation("ProfileToStory")
+  favoriteStories         String[]
+  following               Profile[]                 @relation("FollowRelation")
+  followers               Profile[]                 @relation("FollowRelation")
+  notifications           Notification[]            @relation("ProfileToNotifications")
+  reviews                 Review[]                  @relation("ProfileToReviews")
+  stripeCustomerId        String?                   @unique
+  paymentLinks            PaymentLink[]             @relation("ProfileToPaymentLink")
+  store                   Store?                    @relation("ProfileToStore")
+  memberships             Membership[]              @relation("ProfileToMembership")
+  orders                  Order[]                   @relation("ProfileToOrder")
+  profileWall             Comment[]                 @relation("ProfileToProfileWall")
+  comments                Comment[]                 @relation("ProfileToComments")
+  conversations           Conversation[]            @relation("ProfileToConversations")
+  messagesSent            Message[]                 @relation("ProfileToSentMessages")
+  messagesReceived        Message[]                 @relation("ProfileToReceivedMessages")
+  storyRatings            StoryRating[]             @relation("ProfileToStoryRating")
+  conversationUnreadCount ConversationUnreadCount[] @relation("ProfileToConversationUnreadCount")
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
 
   @@index([username])
 }
@@ -269,11 +270,25 @@ model Review {
 }
 
 model Conversation {
-  id           String    @id @default(uuid())
-  participants Profile[] @relation("ProfileToConversations")
-  messages     Message[] @relation("ConversationToMessages")
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id           String                    @id @default(uuid())
+  participants Profile[]                 @relation("ProfileToConversations")
+  messages     Message[]                 @relation("ConversationToMessages")
+  unreadCounts ConversationUnreadCount[] @relation("ConversationToConversationUnreadCount")
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+}
+
+model ConversationUnreadCount {
+  id             String       @id @default(uuid())
+  conversation   Conversation @relation("ConversationToConversationUnreadCount", fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId String
+  user           Profile      @relation("ProfileToConversationUnreadCount", fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  unreadCount    Int          @default(0)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
 }
 
 model Message {
@@ -284,10 +299,23 @@ model Message {
   senderId       String
   receiver       Profile      @relation("ProfileToReceivedMessages", fields: [receiverId], references: [id])
   receiverId     String
+  isRead         Boolean      @default(false)
   conversation   Conversation @relation("ConversationToMessages", fields: [conversationId], references: [id], onDelete: Cascade)
   createdAt      DateTime     @default(now())
 
   @@index([conversationId])
   @@index([senderId])
   @@index([receiverId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  user      Profile  @relation("ProfileToNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  content   String
+  sender    String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

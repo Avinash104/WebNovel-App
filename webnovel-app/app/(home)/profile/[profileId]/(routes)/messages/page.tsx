@@ -1,7 +1,6 @@
 import { ChatWindow } from "@/app/(home)/components/chat-window"
 import ConversationList from "@/app/(home)/components/conversation-list"
 import prismadb from "@/lib/prismadb"
-// import { PAGE_SIZE } from "@/lib/utils"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 

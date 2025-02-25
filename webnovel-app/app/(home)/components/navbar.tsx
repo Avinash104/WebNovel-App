@@ -2,13 +2,25 @@ import MainNav from "@/app/(home)/components/main-nav"
 import Container from "@/app/(home)/components/ui/container"
 import UserProfileButton from "@/app/(home)/components/user-profile-button"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { UserButton } from "@clerk/nextjs"
+import prismadb from "@/lib/prismadb"
+// import { UserButton } from "@clerk/nextjs"
 import { currentUser } from "@clerk/nextjs/server"
 import Link from "next/link"
 import React from "react"
+import Notifications from "./notifications"
 
 const Navbar = async () => {
   const user = await currentUser()
+
+  let notificationFeed = []
+  if (user) {
+    console.log("user: ", user.id)
+    notificationFeed = await prismadb.notification.findMany({
+      where: { userId: user.id },
+      take: 10,
+      orderBy: { createdAt: "desc" },
+    })
+  }
 
   return (
     <div className="border-b">
@@ -21,7 +33,10 @@ const Navbar = async () => {
           <div className="ml-auto flex items-center space-x-4">
             <ThemeToggle />
             {user ? (
-              <UserProfileButton />
+              <>
+                <Notifications notificationFeed={notificationFeed} />
+                <UserProfileButton />
+              </>
             ) : (
               <Link href={"/sign-in"}>Sign In</Link>
             )}

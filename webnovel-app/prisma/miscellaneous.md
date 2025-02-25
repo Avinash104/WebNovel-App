@@ -6,6 +6,7 @@
 
 - [Cron Job Scheduler for views](#cron-scheduler)
 - [Trigger for author](#trigger-story-author)
+- [Real Time Supabase Messages](#real-time-message-update)
 
 ## Cron Job Scheduler for views
 
@@ -71,4 +72,32 @@ CREATE TRIGGER trigger_update_story_author
 AFTER INSERT ON "Story"
 FOR EACH ROW
 EXECUTE FUNCTION update_story_author();
+```
+
+## Real Time Supabase Messages
+
+```sql
+SELECT * FROM pg_publication_tables WHERE pubname = 'supabase_realtime_messages_publication';
+ALTER PUBLICATION supabase_realtime_messages_publication ADD TABLE "Message";
+GRANT SELECT ON "Message" TO anon;
+```
+
+```sql
+SELECT cron.schedule(
+  'update_unreadMessages_count',
+  '*/10 * * * *',
+  $$
+  UPDATE "Conversation" c
+  SET "unreadMessages" = COALESCE(subquery.unread_count, 0)
+  FROM (
+    SELECT "id" AS conversation_id,
+      (SELECT COUNT(*)
+       FROM "Message" m
+       WHERE m."conversationId" = c.id
+         AND m."isRead" = FALSE) AS unread_count
+    FROM "Conversation" c
+  ) AS subquery
+  WHERE c.id = subquery.conversation_id;
+  $$
+);
 ```

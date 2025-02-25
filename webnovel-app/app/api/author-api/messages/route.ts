@@ -69,10 +69,22 @@ export async function POST(req: Request) {
       },
     })
 
-    return NextResponse.json(
-      { success: true, message: newMessage },
-      { status: 201 }
-    )
+    // Find the sender's username
+    const profileUsername = await prismadb.profile.findUnique({
+      where: { id: senderId },
+      select: { username: true },
+    })
+
+    // Create a notification in receiver's feed
+    await prismadb.notification.create({
+      data: {
+        content: message,
+        sender: profileUsername.username,
+        user: { connect: { id: receiverId } },
+      },
+    })
+
+    return NextResponse.json(newMessage)
   } catch (error) {
     console.error("MESSAGE_POST_ERROR", error)
     return NextResponse.json(
@@ -104,7 +116,7 @@ export async function GET(req: Request) {
       take: PAGE_SIZE,
     })
 
-    console.log("Feteched messages: ", messages)
+    // console.log("Feteched messages: ", messages)
 
     return NextResponse.json(messages)
   } catch (error) {
@@ -113,5 +125,44 @@ export async function GET(req: Request) {
       { error: "Internal server error" },
       { status: 500 }
     )
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    console.log("Inside patchin the messages")
+    const user = await currentUser()
+
+    if (!user) {
+      return new NextResponse("Unauthenticated", { status: 401 })
+    }
+    console.log("user id: ", user.id)
+
+    const body = await req.json()
+    const { conversationId, receiverId } = body
+
+    console.log("params receiver Id", receiverId)
+    // Basic validations
+    if (!conversationId || !receiverId) {
+      return new NextResponse("Invalid input data", { status: 400 })
+    }
+
+    await prismadb.message.updateMany({
+      where: {
+        conversationId,
+        receiverId,
+        isRead: false,
+      },
+      data: {
+        isRead: true,
+      },
+    })
+
+    console.log("Updated successfully")
+
+    return NextResponse.json({ status: 200 })
+  } catch (error) {
+    console.error("[REVIEW_PATCH_ERROR]", error)
+    return new NextResponse("Internal Server Error", { status: 500 })
   }
 }

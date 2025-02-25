@@ -2,9 +2,15 @@
 
 import { Button } from "@/components/ui/button"
 import { useChatStore } from "@/hooks/use-chat-store"
-import { PAGE_SIZE } from "@/lib/utils"
+import { supabase } from "@/lib/supabase"
+import { MessageDeliveryStateType, PAGE_SIZE } from "@/lib/utils"
 import { Message } from "@prisma/client"
+import {
+  RealtimePostgresInsertPayload,
+  RealtimePostgresUpdatePayload,
+} from "@supabase/supabase-js"
 import axios from "axios"
+import { Check, CheckCheck } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "react-hot-toast"
 
@@ -15,6 +21,8 @@ export const ChatWindow = () => {
   const [messages, setMessages] = useState<Message[]>([])
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [page, setPage] = useState<number>(0)
+  const [messageDeliveryState, setMessageDeliveryState] =
+    useState<MessageDeliveryStateType>(MessageDeliveryStateType?.DRAFT)
   const chatContainerRef = useRef<HTMLDivElement | null>(null)
 
   // Fetch messages in chunks for infinite scrolling
@@ -26,7 +34,6 @@ export const ChatWindow = () => {
       const response = await axios.get(`/api/author-api/messages`, {
         params: { conversationId: selectedConversation?.id, page },
       })
-      console.log("API response:", response.data)
 
       if (response.data.length < PAGE_SIZE) setHasMore(false)
       const newMessages = response.data.reverse()
@@ -68,7 +75,6 @@ export const ChatWindow = () => {
   // Scroll to bottom only on first load or when a new message is sent
   useEffect(() => {
     const chatContainer = chatContainerRef.current
-
     if (!chatContainer) return
 
     if (page === 0) {
@@ -96,10 +102,9 @@ export const ChatWindow = () => {
     try {
       setLoading(true)
       const payload = { message, senderId, receiverId }
-      const response = await axios.post(`/api/author-api/messages`, payload)
-      toast.success("Message sent.")
-      setMessages((prev) => [...prev, response.data])
+      await axios.post(`/api/author-api/messages`, payload)
       setMessage("")
+      setMessageDeliveryState(MessageDeliveryStateType.SENT)
 
       // Smooth scroll to bottom after sending a message
       setTimeout(() => {
@@ -119,6 +124,96 @@ export const ChatWindow = () => {
     }
   }
 
+  // Realtiime handling of message inserts and updates
+  useEffect(() => {
+    if (!selectedConversation) return
+
+    const channel = supabase
+      .channel("conversation-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "Message",
+          filter: `conversationId=eq.${selectedConversation.id}`,
+        },
+        (payload: RealtimePostgresInsertPayload<Message>) => {
+          const newMessage: Message = payload.new
+          setMessages((prev) => [...prev, newMessage])
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "Message",
+          filter: `conversationId=eq.${selectedConversation.id}`,
+        },
+        (payload: RealtimePostgresUpdatePayload<Message>) => {
+          // console.log("payload from message table update", payload)
+          const updatedMessage: Message = payload.new
+          if (updatedMessage.isRead) {
+            console.log("✅ Message marked as read:", updatedMessage)
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === updatedMessage.id ? updatedMessage : msg
+              )
+            )
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [selectedConversation?.id])
+
+  useEffect(() => {
+    const lastSentMessage = messages
+      .slice()
+      .reverse()
+      .find((msg) => msg.senderId === senderId)
+
+    if (lastSentMessage) {
+      if (lastSentMessage.isRead) {
+        setMessageDeliveryState(MessageDeliveryStateType.READ)
+      } else {
+        setMessageDeliveryState(MessageDeliveryStateType.DELIVERED)
+      }
+    }
+  }, [messages, senderId])
+
+  const markMessagesAsRead = async (
+    conversationId: string,
+    receiverId: string
+  ) => {
+    try {
+      setLoading(true)
+      const payload = { conversationId, receiverId }
+      await axios.patch(`/api/author-api/messages`, payload)
+      setMessageDeliveryState(MessageDeliveryStateType.READ)
+      toast.success("Updated messages")
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error("Something went wrong!!", error?.response?.data?.message)
+      } else {
+        toast.error("Something went wrong!!")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fire markMessagesAsRead whenever messages state is updated
+  useEffect(() => {
+    if (selectedConversation && receiverId) {
+      markMessagesAsRead(selectedConversation?.id, receiverId || "")
+    }
+  }, [messages, selectedConversation, receiverId])
+
   return (
     <div className="w-2/3 p-4 h-screen flex flex-col">
       {selectedConversation ? (
@@ -126,26 +221,48 @@ export const ChatWindow = () => {
           <div
             ref={chatContainerRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto border-b border-gray-300 p-4 scrollbar-hide"
+            className="flex-1 overflow-y-auto border-b border-gray-300 p-4"
           >
-            {messages.map((msg: Message) => (
-              <div
-                key={msg.id}
-                className={`mb-2 ${
-                  msg.senderId === senderId ? "text-right" : "text-left"
-                }`}
-              >
-                <span
-                  className={`px-3 py-2 rounded-md inline-block ${
-                    msg.senderId === senderId
-                      ? "bg-lime-500 dark:bg-lime-600"
-                      : "bg-slate-400"
-                  }`}
+            {messages.map((msg: Message, index: number) => {
+              const isSender = msg.senderId === senderId
+              const isLastSentMessage =
+                isSender &&
+                index === messages.findLastIndex((m) => m.senderId === senderId)
+
+              return (
+                <div
+                  key={msg.id}
+                  className={`mb-2 ${isSender ? "text-right" : "text-left"}`}
                 >
-                  {msg.content}
-                </span>
-              </div>
-            ))}
+                  <div className="relative inline-block">
+                    <span
+                      className={`px-3 py-2 rounded-md inline-block ${
+                        isSender
+                          ? "bg-lime-500 dark:bg-lime-600"
+                          : "bg-slate-400"
+                      }`}
+                    >
+                      {msg.content}
+                    </span>
+
+                    {/* ✅ Show ticks only for the last message sent by the user */}
+                    {isLastSentMessage && (
+                      <span className="absolute -bottom-5 right-0 flex items-center space-x-1">
+                        {messageDeliveryState ===
+                        MessageDeliveryStateType.READ ? (
+                          <CheckCheck className="w-4 h-4 text-blue-500" />
+                        ) : messageDeliveryState ===
+                          MessageDeliveryStateType.DELIVERED ? (
+                          <CheckCheck className="w-4 h-4 text-gray-500" />
+                        ) : (
+                          <Check className="w-4 h-4 text-gray-400" />
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
             {loading && <p className="text-center">Loading more messages...</p>}
           </div>
 

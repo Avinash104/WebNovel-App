@@ -161,15 +161,11 @@ const getSimilarStories = async (storyId: string) => {
       select: { categories: true }, // Assuming categories is an array of strings
     })
 
-    console.log("current story: ", currentStory)
-
     if (!currentStory || !currentStory.categories.length) return []
 
     const categoryNames = currentStory.categories.map(
       (category: Category) => category.name
     )
-
-    console.log("cat names: ", categoryNames)
 
     // Fetch stories that share at least one category
     let similarStories = await prismadb.story.findMany({
@@ -193,8 +189,6 @@ const getSimilarStories = async (storyId: string) => {
         views: true,
       },
     })
-
-    console.log("similar stories list: ", similarStories)
 
     // Shuffle results randomly
     similarStories = similarStories.sort(() => Math.random() - 0.5)

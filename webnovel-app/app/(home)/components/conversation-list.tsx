@@ -39,16 +39,16 @@ const ConversationList: React.FC<ConversationListProps> = ({
     )
   }
 
-  const conversationsWithUsernames = useMemo(
-    () =>
-      conversations?.map((conversation) => ({
-        ...conversation,
-        otherUsername: conversation.participants.find(
-          (p: Profile) => p.id !== user?.id
-        )?.username,
-      })),
-    [conversations, user?.id]
-  )
+  const conversationsWithUsernames = useMemo(() => {
+    if (!user?.id) return [] // Ensure user is loaded
+
+    return conversations?.map((conversation) => ({
+      ...conversation,
+      otherUsername:
+        conversation.participants.find((p: Profile) => p.id !== user.id)
+          ?.username || "loading..",
+    }))
+  }, [conversations, user?.id])
 
   return (
     <div className="w-1/3 border-r border-gray-300 p-4 overflow-y-auto">
@@ -57,14 +57,17 @@ const ConversationList: React.FC<ConversationListProps> = ({
         {conversationsWithUsernames?.map((conversation) => (
           <li
             key={conversation.id}
-            className={`p-2 cursor-pointer rounded-md ${
+            className={`p-2 cursor-pointer rounded-md flex items-center justify-between ${
               selectedConversation?.id === conversation.id
                 ? "bg-blue-500 text-white"
                 : "hover:bg-gray-100"
             }`}
             onClick={() => onConversationSelection(conversation)}
           >
-            {conversation.otherUsername || "Loading..."}
+            {conversation.otherUsername || "loading..."}{" "}
+            <span className="bg-red-600 rounded-full px-2 text-base">
+              {conversation.unreadMessages}
+            </span>
           </li>
         ))}
       </ul>
