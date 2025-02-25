@@ -135,7 +135,10 @@ const ReviewBlock: React.FC<ReviewBlockProps> = ({
           </div>
           <Link href={`/users/${poster}`} className="">
             <span className="text-lg">By </span>
-            <span className="font-bold text-xl text-sky-400"> {poster}</span>
+            <span className="font-bold text-xl text-sky-400 hover:underline">
+              {" "}
+              {poster}
+            </span>
           </Link>
         </CardHeader>
         <CardContent>

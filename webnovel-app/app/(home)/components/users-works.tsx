@@ -1,25 +1,27 @@
 "use client"
 
-import { StoryWithViews } from "@/lib/utils"
-import { StoreItem } from "@prisma/client"
+import { StoreItem, Story } from "@prisma/client"
+import Link from "next/link"
 import React from "react"
 import StoryCard from "./story-card"
 
-interface ProfileWorksProps {
-  stories: StoryWithViews[] | null
+interface UsersWorksProps {
+  stories: Story[] | null
   storeItems: StoreItem[] | null
 }
-
-const ProfileWorks: React.FC<ProfileWorksProps> = ({ stories, storeItems }) => {
+const UsersWorks: React.FC<UsersWorksProps> = ({ stories, storeItems }) => {
   return (
     <div className="px-4 bg-rose-500">
       <h2 className="my-3 text-3xl font-semibold">Stories</h2>
 
       {stories && stories.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {stories.map((story) => (
-            <StoryCard key={story.id} story={story} />
-          ))}
+          {stories &&
+            stories.map((story) => (
+              <Link key={story.id} href={`/stories/${story.id}`}>
+                <StoryCard story={story} />
+              </Link>
+            ))}
         </div>
       ) : (
         <p>No stories available.</p>
@@ -35,4 +37,4 @@ const ProfileWorks: React.FC<ProfileWorksProps> = ({ stories, storeItems }) => {
   )
 }
 
-export default ProfileWorks
+export default UsersWorks

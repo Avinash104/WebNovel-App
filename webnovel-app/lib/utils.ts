@@ -1,10 +1,12 @@
-import { Story } from "@prisma/client"
+import { Conversation, Membership, Message, Profile } from "@prisma/client"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export const PAGE_SIZE = 20
 
 export enum pageType {
   PROFILE,
@@ -18,7 +20,24 @@ export enum CommentType {
   STORE_ITEM,
 }
 
-export interface StoryWithViews extends Story {
-  totalViews: number
-  author: string
+export enum MessageDeliveryStateType {
+  DRAFT,
+  SENT,
+  DELIVERED,
+  READ,
+}
+
+export type ExtendedMembership = Membership & {
+  story: {
+    id: string
+    title: string
+  }
+  membershipLevel: {
+    title: string
+  }
+}
+
+export type ExtendedConversation = Conversation & {
+  participants: Profile[]
+  messages: Message[]
 }

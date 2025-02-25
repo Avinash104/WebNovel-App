@@ -32,7 +32,7 @@ const UserProfileButton = () => {
     {
       href: `/profile/${user?.id}/favorites`,
       label: "Favorities",
-      active: pathname === `/profile/${user?.id}/favorities`,
+      active: pathname === `/profile/${user?.id}/favorites`,
     },
     {
       href: `/profile/${user?.id}/reviews`,
@@ -67,7 +67,7 @@ const UserProfileButton = () => {
                 <Link
                   href={route.href}
                   className={cn(
-                    "text-base font-medium transition-colors hover:text-primary",
+                    "text-xl font-medium transition-colors hover:text-primary px-3",
                     route.active
                       ? "text-black dark:text-white"
                       : "text-muted-foreground"
@@ -83,7 +83,7 @@ const UserProfileButton = () => {
               <DropdownMenuItem>
                 <Link
                   href="/author"
-                  className="text-base font-medium transition-colors hover:text-primary my-1"
+                  className="text-xl px-3 font-medium transition-colors hover:text-primary my-1"
                 >
                   Become an Author
                 </Link>
@@ -91,7 +91,7 @@ const UserProfileButton = () => {
 
               <Separator />
               <DropdownMenuItem>
-                <span className="text-base font-medium transition-colors hover:text-primary my-1">
+                <span className="text-xl px-3 font-medium transition-colors hover:text-primary my-1">
                   <SignOutButton />
                 </span>
               </DropdownMenuItem>
