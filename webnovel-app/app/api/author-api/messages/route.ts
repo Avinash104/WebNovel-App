@@ -130,27 +130,25 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    console.log("Inside patchin the messages")
     const user = await currentUser()
 
     if (!user) {
       return new NextResponse("Unauthenticated", { status: 401 })
     }
-    console.log("user id: ", user.id)
+    console.log("Authenticated user id: ", user.id)
 
     const body = await req.json()
-    const { conversationId, receiverId } = body
+    const { conversationId } = body
 
-    console.log("params receiver Id", receiverId)
-    // Basic validations
-    if (!conversationId || !receiverId) {
+    if (!conversationId) {
       return new NextResponse("Invalid input data", { status: 400 })
     }
 
-    await prismadb.message.updateMany({
+    // 🔥 Use authenticated user ID to mark messages as read
+    const updatedMessages = await prismadb.message.updateMany({
       where: {
         conversationId,
-        receiverId,
+        receiverId: user.id, // Only mark messages where the authenticated user is the receiver
         isRead: false,
       },
       data: {
@@ -158,11 +156,14 @@ export async function PATCH(req: Request) {
       },
     })
 
-    console.log("Updated successfully")
+    console.log(`Updated ${updatedMessages.count} messages as read`)
 
-    return NextResponse.json({ status: 200 })
+    return NextResponse.json({ success: true, updated: updatedMessages.count })
   } catch (error) {
-    console.error("[REVIEW_PATCH_ERROR]", error)
-    return new NextResponse("Internal Server Error", { status: 500 })
+    console.error("Error updating messages:", error)
+    return NextResponse.json(
+      { message: "Failed to update messages" },
+      { status: 500 }
+    )
   }
 }

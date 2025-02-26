@@ -152,10 +152,8 @@ export const ChatWindow = () => {
           filter: `conversationId=eq.${selectedConversation.id}`,
         },
         (payload: RealtimePostgresUpdatePayload<Message>) => {
-          // console.log("payload from message table update", payload)
           const updatedMessage: Message = payload.new
           if (updatedMessage.isRead) {
-            console.log("✅ Message marked as read:", updatedMessage)
             setMessages((prev) =>
               prev.map((msg) =>
                 msg.id === updatedMessage.id ? updatedMessage : msg
@@ -186,14 +184,11 @@ export const ChatWindow = () => {
     }
   }, [messages, senderId])
 
-  const markMessagesAsRead = async (
-    conversationId: string,
-    receiverId: string
-  ) => {
+  // Mark messages as read
+  const markMessagesAsRead = async (conversationId: string) => {
     try {
       setLoading(true)
-      const payload = { conversationId, receiverId }
-      await axios.patch(`/api/author-api/messages`, payload)
+      await axios.patch(`/api/author-api/messages`, { conversationId })
       setMessageDeliveryState(MessageDeliveryStateType.READ)
       toast.success("Updated messages")
     } catch (error) {
@@ -209,10 +204,15 @@ export const ChatWindow = () => {
 
   // Fire markMessagesAsRead whenever messages state is updated
   useEffect(() => {
-    if (selectedConversation && receiverId) {
-      markMessagesAsRead(selectedConversation?.id, receiverId || "")
+    if (
+      selectedConversation &&
+      messages.length > 0 &&
+      // Only update if the last message isn't from the user
+      messages[messages.length - 1].senderId !== senderId
+    ) {
+      markMessagesAsRead(selectedConversation.id)
     }
-  }, [messages, selectedConversation, receiverId])
+  }, [messages, selectedConversation, senderId])
 
   return (
     <div className="w-2/3 p-4 h-screen flex flex-col">
@@ -245,7 +245,7 @@ export const ChatWindow = () => {
                       {msg.content}
                     </span>
 
-                    {/* ✅ Show ticks only for the last message sent by the user */}
+                    {/* Show ticks only for the last message sent by the user */}
                     {isLastSentMessage && (
                       <span className="absolute -bottom-5 right-0 flex items-center space-x-1">
                         {messageDeliveryState ===
