@@ -144,7 +144,7 @@ export async function PATCH(req: Request) {
       return new NextResponse("Invalid input data", { status: 400 })
     }
 
-    // 🔥 Use authenticated user ID to mark messages as read
+    // Use authenticated user ID to mark messages as read
     const updatedMessages = await prismadb.message.updateMany({
       where: {
         conversationId,

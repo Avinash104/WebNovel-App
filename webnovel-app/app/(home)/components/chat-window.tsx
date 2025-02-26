@@ -37,7 +37,14 @@ export const ChatWindow = () => {
 
       if (response.data.length < PAGE_SIZE) setHasMore(false)
       const newMessages = response.data.reverse()
-      setMessages((prev) => [...newMessages, ...prev])
+
+      setMessages((prev) => {
+        const combined = [...newMessages, ...prev]
+        const uniqueMessages = Array.from(
+          new Map(combined.map((msg) => [msg.id, msg])).values()
+        )
+        return uniqueMessages
+      })
     } catch (error) {
       if (axios.isAxiosError(error)) {
         toast.error("Something went wrong!!", error?.response?.data?.message)
@@ -140,7 +147,11 @@ export const ChatWindow = () => {
         },
         (payload: RealtimePostgresInsertPayload<Message>) => {
           const newMessage: Message = payload.new
-          setMessages((prev) => [...prev, newMessage])
+          setMessages((prev) =>
+            prev.some((msg) => msg.id === newMessage.id)
+              ? prev
+              : [...prev, newMessage]
+          )
         }
       )
       .on(
@@ -190,7 +201,6 @@ export const ChatWindow = () => {
       setLoading(true)
       await axios.patch(`/api/author-api/messages`, { conversationId })
       setMessageDeliveryState(MessageDeliveryStateType.READ)
-      toast.success("Updated messages")
     } catch (error) {
       if (axios.isAxiosError(error)) {
         toast.error("Something went wrong!!", error?.response?.data?.message)
