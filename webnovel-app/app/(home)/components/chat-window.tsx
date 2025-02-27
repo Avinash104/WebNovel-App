@@ -18,6 +18,7 @@ export const ChatWindow = () => {
   const { selectedConversation, senderId, receiverId } = useChatStore()
   const [message, setMessage] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(false)
+  const [isLoadingOldMessages, setIsLoadingOldMessages] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [page, setPage] = useState<number>(0)
@@ -31,6 +32,7 @@ export const ChatWindow = () => {
 
     try {
       setLoading(true)
+      setIsLoadingOldMessages(true)
       const response = await axios.get(`/api/author-api/messages`, {
         params: { conversationId: selectedConversation?.id, page },
       })
@@ -93,12 +95,23 @@ export const ChatWindow = () => {
         })
       }, 100)
     } else {
-      // When loading older messages, maintain the scroll position
-      const prevScrollHeight = chatContainer.scrollHeight
-      setTimeout(() => {
-        const newScrollHeight = chatContainer.scrollHeight
-        chatContainer.scrollTop = newScrollHeight - prevScrollHeight
-      }, 100)
+      if (isLoadingOldMessages) {
+        // Preserve scroll position when older messages are loaded
+        const prevScrollHeight = chatContainer.scrollHeight
+        setTimeout(() => {
+          const newScrollHeight = chatContainer.scrollHeight
+          chatContainer.scrollTop = newScrollHeight - prevScrollHeight
+          setIsLoadingOldMessages(false) // Reset after handling
+        }, 100)
+      } else {
+        // Scroll to bottom when a new message is sent
+        setTimeout(() => {
+          chatContainer.scrollTo({
+            top: chatContainer.scrollHeight,
+            behavior: "smooth",
+          })
+        }, 100)
+      }
     }
   }, [messages])
 

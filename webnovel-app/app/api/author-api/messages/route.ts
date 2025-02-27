@@ -13,7 +13,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorised." }, { status: 400 })
     }
 
-    console.log(message, receiverId, senderId)
     if (!message || !receiverId || !senderId) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -44,11 +43,8 @@ export async function POST(req: Request) {
       include: { participants: true },
     })
 
-    console.log("conv: ", conversation)
-
     // If no conversation exists, create a new one
     if (!conversation) {
-      console.log("Creating a new conv ...")
       conversation = await prismadb.conversation.create({
         data: {
           participants: {
@@ -96,7 +92,6 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    console.log("Inside GET")
     const user = await currentUser()
     const { searchParams } = new URL(req.url)
     const conversationId = searchParams.get("conversationId")
@@ -107,16 +102,12 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorised." }, { status: 400 })
     }
 
-    console.log("params: ", conversationId, page)
-
     const messages = await prismadb.message.findMany({
       where: { conversationId },
       orderBy: { createdAt: "desc" },
       skip: Number(page) * PAGE_SIZE,
       take: PAGE_SIZE,
     })
-
-    // console.log("Feteched messages: ", messages)
 
     return NextResponse.json(messages)
   } catch (error) {
@@ -135,7 +126,6 @@ export async function PATCH(req: Request) {
     if (!user) {
       return new NextResponse("Unauthenticated", { status: 401 })
     }
-    console.log("Authenticated user id: ", user.id)
 
     const body = await req.json()
     const { conversationId } = body
@@ -156,11 +146,9 @@ export async function PATCH(req: Request) {
       },
     })
 
-    console.log(`Updated ${updatedMessages.count} messages as read`)
-
     return NextResponse.json({ success: true, updated: updatedMessages.count })
   } catch (error) {
-    console.error("Error updating messages:", error)
+    console.error("MESSAGE_PATCH_ERROR", error)
     return NextResponse.json(
       { message: "Failed to update messages" },
       { status: 500 }
