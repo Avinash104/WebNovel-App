@@ -18,19 +18,26 @@ export const ChatWindow = () => {
   const { selectedConversation, senderId, receiverId } = useChatStore()
   const [message, setMessage] = useState<string>("")
   const [loading, setLoading] = useState<boolean>(false)
-  const [isLoadingOldMessages, setIsLoadingOldMessages] = useState(false)
+  const [isLoadingOldMessages, setIsLoadingOldMessages] =
+    useState<boolean>(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [hasMore, setHasMore] = useState<boolean>(true)
   const [page, setPage] = useState<number>(0)
   const [messageDeliveryState, setMessageDeliveryState] =
     useState<MessageDeliveryStateType>(MessageDeliveryStateType?.DRAFT)
   const chatContainerRef = useRef<HTMLDivElement | null>(null)
+  const [isMarkingRead, setIsMarkingRead] = useState(false)
 
   // Fetch messages in chunks for infinite scrolling
   const fetchMessages = async () => {
+    console.log("fetch message has been triggered")
+    console.log("fetch mess loading: ", loading, "has more: ", hasMore)
+
     if (loading || !hasMore) return
 
+    console.log("fetch message has been triggered 2nd checkpoint")
     try {
+      console.log("loading state set to true in fetch try block")
       setLoading(true)
       setIsLoadingOldMessages(true)
       const response = await axios.get(`/api/author-api/messages`, {
@@ -54,19 +61,28 @@ export const ChatWindow = () => {
         toast.error("Something went wrong!!")
       }
     } finally {
+      console.log("loading state set to false in fetch finally block")
       setLoading(false)
     }
   }
 
   // Trigger message fetch when page changes
+  // Seperated fetchMessages from the state updates to ensure proper state updates
   useEffect(() => {
+    console.log("use effect loading: ", loading, "has more: ", hasMore)
     if (selectedConversation) {
       setMessages([])
       setPage(0)
       setHasMore(true)
-      fetchMessages()
     }
   }, [selectedConversation])
+
+  // Wait for state updates, then fetch messages
+  useEffect(() => {
+    if (selectedConversation && hasMore) {
+      fetchMessages()
+    }
+  }, [selectedConversation, hasMore])
 
   // Detect scroll to top for infinite loading
   const handleScroll = () => {
@@ -120,6 +136,7 @@ export const ChatWindow = () => {
     if (!message.trim() || !selectedConversation) return
 
     try {
+      console.log("loading state set to true in sendMessage funct")
       setLoading(true)
       const payload = { message, senderId, receiverId }
       await axios.post(`/api/author-api/messages`, payload)
@@ -140,6 +157,7 @@ export const ChatWindow = () => {
         toast.error("Something went wrong!!")
       }
     } finally {
+      console.log("loading state set to false in sendMessage funct")
       setLoading(false)
     }
   }
@@ -211,8 +229,16 @@ export const ChatWindow = () => {
   // Mark messages as read
   const markMessagesAsRead = async (conversationId: string) => {
     try {
-      setLoading(true)
+      console.log("loading state set to true in markRead funct")
+      setIsMarkingRead(true)
       await axios.patch(`/api/author-api/messages`, { conversationId })
+      // await axios
+      //   .patch(`/api/author-api/messages`, { conversationId })
+      //   .then((res) => toast.success("Mark as read success:", res))
+      //   .catch((err) => {
+      //     toast.error("Mark as read error:", err)
+      //     throw err // Rethrow to trigger finally
+      //   })
       setMessageDeliveryState(MessageDeliveryStateType.READ)
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -221,7 +247,8 @@ export const ChatWindow = () => {
         toast.error("Something went wrong!!")
       }
     } finally {
-      setLoading(false)
+      console.log("loading state set to false in markRead funct")
+      setIsMarkingRead(false)
     }
   }
 
@@ -299,7 +326,7 @@ export const ChatWindow = () => {
             />
             <Button
               onClick={sendMessage}
-              disabled={loading}
+              disabled={loading || isMarkingRead}
               className="ml-2 bg-blue-500 px-4 py-2 rounded-md"
             >
               Send

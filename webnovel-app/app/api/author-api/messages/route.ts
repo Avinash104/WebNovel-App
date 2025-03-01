@@ -65,6 +65,22 @@ export async function POST(req: Request) {
       },
     })
 
+    // Update the unread message count for the receiver
+    await prismadb.conversationUnreadCount.upsert({
+      where: {
+        conversationId_userId: {
+          conversationId: conversation.id,
+          userId: receiverId,
+        },
+      },
+      update: { unreadCount: { increment: 1 } }, // Increment unread count
+      create: {
+        conversationId: conversation.id,
+        userId: receiverId,
+        unreadCount: 1, // Start with 1 if no record exists
+      },
+    })
+
     // Find the sender's username
     const profileUsername = await prismadb.profile.findUnique({
       where: { id: senderId },
@@ -134,7 +150,7 @@ export async function PATCH(req: Request) {
       return new NextResponse("Invalid input data", { status: 400 })
     }
 
-    // Use authenticated user ID to mark messages as read
+    // Use user id to mark messages as read
     const updatedMessages = await prismadb.message.updateMany({
       where: {
         conversationId,
@@ -144,6 +160,12 @@ export async function PATCH(req: Request) {
       data: {
         isRead: true,
       },
+    })
+
+    // Reset unread count for this conversation
+    await prismadb.conversationUnreadCount.updateMany({
+      where: { conversationId, userId: user.id },
+      data: { unreadCount: 0 }, // Reset unread count
     })
 
     return NextResponse.json({ success: true, updated: updatedMessages.count })

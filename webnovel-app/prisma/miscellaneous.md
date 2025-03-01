@@ -83,6 +83,12 @@ GRANT SELECT ON "Message" TO anon;
 ```
 
 ```sql
+-- ALTER PUBLICATION supabase_realtime_messages_publication ADD TABLE "ConversationUnreadCount";
+GRANT SELECT ON "ConversationUnreadCount" TO anon;
+-- SELECT * FROM pg_publication_tables WHERE pubname = 'supabase_realtime_messages_publication';
+```
+
+```sql
 SELECT cron.schedule(
   'update_unreadMessages_count',
   '*/10 * * * *',

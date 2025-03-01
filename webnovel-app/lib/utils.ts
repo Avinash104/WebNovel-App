@@ -1,4 +1,4 @@
-import { Conversation, Membership, Message, Profile } from "@prisma/client"
+import { Conversation, Membership } from "@prisma/client"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -37,7 +37,13 @@ export type ExtendedMembership = Membership & {
   }
 }
 
+export interface Participant {
+  id: string
+  username: string
+}
+
+// Extend Prisma's `Conversation` type to include `unreadMessages`
 export type ExtendedConversation = Conversation & {
-  participants: Profile[]
-  messages: Message[]
+  participants: { id: string; username: string }[] // Keep relevant user details
+  unreadMessages: number
 }
