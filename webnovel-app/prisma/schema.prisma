@@ -308,14 +308,24 @@ model Message {
   @@index([receiverId])
 }
 
+enum NotificationType {
+  MESSAGE
+  PROFILE_WALL
+  STORY
+  CHAPTER
+  STORE_ITEM
+}
+
 model Notification {
-  id        String   @id @default(uuid())
-  user      Profile  @relation("ProfileToNotifications", fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  content   String
-  sender    String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id               String           @id @default(uuid())
+  user             Profile          @relation("ProfileToNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  notificationType NotificationType
+  originId         String
+  userId           String
+  content          String
+  sender           String
+  isRead           Boolean          @default(false)
+  createdAt        DateTime         @default(now())
 
   @@index([userId])
 }

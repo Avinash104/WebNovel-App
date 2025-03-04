@@ -34,7 +34,7 @@ export default async function HomeLayout({
   return (
     <div className={font.className}>
       <Navbar />
-      {children}
+      <div className="pt-16">{children}</div>
       <Footer />
     </div>
   )

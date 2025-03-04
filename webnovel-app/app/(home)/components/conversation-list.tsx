@@ -4,6 +4,7 @@ import { useChatStore } from "@/hooks/use-chat-store"
 import { supabase } from "@/lib/supabase"
 import { ExtendedConversation, Participant } from "@/lib/utils"
 import { useUser } from "@clerk/nextjs"
+import { useParams, useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 
 interface ConversationListProps {
@@ -14,6 +15,9 @@ const ConversationList: React.FC<ConversationListProps> = ({
   extendedConversations,
 }) => {
   const { user } = useUser()
+  const router = useRouter()
+  const params = useParams()
+
   const {
     selectedConversation,
     setSelectedConversation,
@@ -77,6 +81,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
       conversation.participants.find((p: Participant) => p.id !== user?.id)
         ?.id || ""
     )
+    router.push(`/profile/${params.profileId}/messages/${conversation.id}`)
   }
 
   const conversationsWithUsernames = useMemo(() => {
@@ -100,7 +105,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
             className={`p-2 cursor-pointer rounded-md flex items-center justify-between ${
               selectedConversation?.id === conversation.id
                 ? "bg-blue-500 text-white"
-                : "hover:bg-gray-100"
+                : "hover:bg-gray-400"
             }`}
             onClick={() => onConversationSelection(conversation)}
           >

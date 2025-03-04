@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button"
 import { Category, Story } from "@prisma/client"
 import axios from "axios"
-import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { toast } from "react-hot-toast"
@@ -111,11 +110,7 @@ const SearchPage = () => {
       {/* Search Results */}
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {stories.length > 0 ? (
-          stories.map((story) => (
-            <Link key={story.id} href={`/stories/${story.id}`}>
-              <StoryCard story={story} />
-            </Link>
-          ))
+          stories.map((story) => <StoryCard key={story.id} story={story} />)
         ) : (
           <p>No stories found.</p>
         )}

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card"
 import { Story } from "@prisma/client"
 import Image from "next/image"
+import Link from "next/link"
 import StarRating from "../stories/component/star-rating"
 
 interface StoryCardProps {
@@ -25,7 +26,10 @@ const StoryCard: React.FC<StoryCardProps> = ({ story }) => {
       <Card>
         <CardHeader>
           <CardTitle>
-            <h4 className="font-bold"> {story.title}</h4>
+            <h4 className="font-bold">
+              {" "}
+              <Link href={`/stories/${story.id}`}> {story.title}</Link>{" "}
+            </h4>
           </CardTitle>
           <CardDescription>
             {" "}
@@ -48,17 +52,15 @@ const StoryCard: React.FC<StoryCardProps> = ({ story }) => {
         </CardHeader>
         <CardContent>
           {/* Author  */}
-          {/* Link inside Link tag caused hydration errors. Will fix this issue later. Removed link to author profile for now. */}
-
-          {/* <Link href={`/users/${story.author}`} className="flex"> */}
-          <div className="flex">
-            <span className="mr-1 font-semibold">By </span>
-            <span className="font-bold text-sky-400 hover:underline">
-              {" "}
-              {story.author}
-            </span>
-          </div>
-          {/* </Link> */}
+          <Link href={`/users/${story.author}`} className="flex">
+            <div className="flex">
+              <span className="mr-1 font-semibold">By </span>
+              <span className="font-bold text-sky-400 hover:underline">
+                {" "}
+                {story.author}
+              </span>
+            </div>
+          </Link>
 
           {/* Story Ratings */}
           <StarRating storyId={story.id} currentRating={story.stars} />

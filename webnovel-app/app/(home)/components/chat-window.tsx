@@ -30,16 +30,13 @@ export const ChatWindow = () => {
 
   // Fetch messages in chunks for infinite scrolling
   const fetchMessages = async () => {
-    console.log("fetch message has been triggered")
-    console.log("fetch mess loading: ", loading, "has more: ", hasMore)
-
     if (loading || !hasMore) return
 
-    console.log("fetch message has been triggered 2nd checkpoint")
     try {
-      console.log("loading state set to true in fetch try block")
       setLoading(true)
       setIsLoadingOldMessages(true)
+      console.log("conv id: ", selectedConversation?.id)
+      console.log("page: ", page)
       const response = await axios.get(`/api/author-api/messages`, {
         params: { conversationId: selectedConversation?.id, page },
       })
@@ -61,7 +58,6 @@ export const ChatWindow = () => {
         toast.error("Something went wrong!!")
       }
     } finally {
-      console.log("loading state set to false in fetch finally block")
       setLoading(false)
     }
   }
@@ -69,7 +65,6 @@ export const ChatWindow = () => {
   // Trigger message fetch when page changes
   // Seperated fetchMessages from the state updates to ensure proper state updates
   useEffect(() => {
-    console.log("use effect loading: ", loading, "has more: ", hasMore)
     if (selectedConversation) {
       setMessages([])
       setPage(0)
@@ -136,7 +131,6 @@ export const ChatWindow = () => {
     if (!message.trim() || !selectedConversation) return
 
     try {
-      console.log("loading state set to true in sendMessage funct")
       setLoading(true)
       const payload = { message, senderId, receiverId }
       await axios.post(`/api/author-api/messages`, payload)
@@ -157,7 +151,6 @@ export const ChatWindow = () => {
         toast.error("Something went wrong!!")
       }
     } finally {
-      console.log("loading state set to false in sendMessage funct")
       setLoading(false)
     }
   }
@@ -229,16 +222,8 @@ export const ChatWindow = () => {
   // Mark messages as read
   const markMessagesAsRead = async (conversationId: string) => {
     try {
-      console.log("loading state set to true in markRead funct")
       setIsMarkingRead(true)
       await axios.patch(`/api/author-api/messages`, { conversationId })
-      // await axios
-      //   .patch(`/api/author-api/messages`, { conversationId })
-      //   .then((res) => toast.success("Mark as read success:", res))
-      //   .catch((err) => {
-      //     toast.error("Mark as read error:", err)
-      //     throw err // Rethrow to trigger finally
-      //   })
       setMessageDeliveryState(MessageDeliveryStateType.READ)
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -247,7 +232,6 @@ export const ChatWindow = () => {
         toast.error("Something went wrong!!")
       }
     } finally {
-      console.log("loading state set to false in markRead funct")
       setIsMarkingRead(false)
     }
   }
@@ -265,7 +249,7 @@ export const ChatWindow = () => {
   }, [messages, selectedConversation, senderId])
 
   return (
-    <div className="w-2/3 p-4 h-screen flex flex-col">
+    <div className="p-4 h-screen flex flex-col">
       {selectedConversation ? (
         <>
           <div
@@ -316,7 +300,7 @@ export const ChatWindow = () => {
             {loading && <p className="text-center">Loading more messages...</p>}
           </div>
 
-          <div className="p-2 flex items-center mb-10">
+          <div className="p-2 flex items-center mb-14">
             <input
               type="text"
               className="flex-1 p-2 border rounded-md"

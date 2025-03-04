@@ -1,6 +1,7 @@
 import prismadb from "@/lib/prismadb"
 import { PAGE_SIZE } from "@/lib/utils"
 import { currentUser } from "@clerk/nextjs/server"
+import { NotificationType } from "@prisma/client"
 import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
@@ -88,14 +89,17 @@ export async function POST(req: Request) {
     })
 
     // Create a notification in receiver's feed
-    await prismadb.notification.create({
+    const newNotification = await prismadb.notification.create({
       data: {
         content: message,
+        notificationType: NotificationType.MESSAGE,
+        originId: conversation.id,
         sender: profileUsername.username,
         user: { connect: { id: receiverId } },
       },
     })
 
+    console.log("notification: ", newNotification)
     return NextResponse.json(newMessage)
   } catch (error) {
     console.error("MESSAGE_POST_ERROR", error)
@@ -112,6 +116,8 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const conversationId = searchParams.get("conversationId")
     const page = Number(searchParams.get("page") ?? 0)
+
+    console.log("conv id for messages fetch: ", conversationId)
 
     // Block if user trying to send message to themselves
     if (!user) {

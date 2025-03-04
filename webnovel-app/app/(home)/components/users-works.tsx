@@ -1,7 +1,6 @@
 "use client"
 
 import { StoreItem, Story } from "@prisma/client"
-import Link from "next/link"
 import React from "react"
 import StoryCard from "./story-card"
 
@@ -17,11 +16,7 @@ const UsersWorks: React.FC<UsersWorksProps> = ({ stories, storeItems }) => {
       {stories && stories.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {stories &&
-            stories.map((story) => (
-              <Link key={story.id} href={`/stories/${story.id}`}>
-                <StoryCard story={story} />
-              </Link>
-            ))}
+            stories.map((story) => <StoryCard key={story.id} story={story} />)}
         </div>
       ) : (
         <p>No stories available.</p>

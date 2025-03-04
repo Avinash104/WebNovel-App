@@ -29,7 +29,7 @@ export default async function Layout({
   }
 
   return (
-    <main className="flex">
+    <main className="flex h-[calc(100vh-4rem)] ">
       <ProfileSidebar />
       {children}
     </main>

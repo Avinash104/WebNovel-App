@@ -37,7 +37,7 @@ const ProfileSidebar = () => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex flex-col bg-slate-200 dark:bg-slate-800 h-screen w-64 p-4 shadow-lg rounded-r-lg">
+      <div className="hidden md:flex flex-col bg-slate-200 dark:bg-slate-800 md:w-64 p-4 shadow-lg rounded-r-lg">
         <div className="space-y-4">
           {items.map((item) => (
             <Link
@@ -60,7 +60,7 @@ const ProfileSidebar = () => {
 
       {/* Mobile Sidebar */}
       <div
-        className={`top-0 left-0 h-screen transition-width duration-300 bg-slate-700 dark:bg-slate-900 ${
+        className={`top-0 left-0 transition-width duration-300 bg-slate-700 dark:bg-slate-900 ${
           isMobileMenuOpen ? "w-56" : "w-14"
         } md:hidden`}
       >

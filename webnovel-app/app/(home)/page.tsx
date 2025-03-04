@@ -60,19 +60,15 @@ const HomePage = () => {
   }, [])
 
   return (
-    <div>
-      <div className="container mx-auto p-4">
-        <h1 className="text-4xl font-bold mb-4">
-          Welcome to Public Story Site
-        </h1>
-        <p className="">Explore stories and dive into chapters.</p>
-        <div>
-          {stories?.length ? (
-            <StorySection stories={stories} />
-          ) : (
-            <p>No stories available at the moment.</p>
-          )}
-        </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-4xl font-bold mb-4">Welcome to Public Story Site</h1>
+      <p>Explore stories and dive into chapters.</p>
+      <div>
+        {stories?.length ? (
+          <StorySection stories={stories} />
+        ) : (
+          <p>No stories available at the moment.</p>
+        )}
       </div>
     </div>
   )

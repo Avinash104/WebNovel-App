@@ -20,6 +20,14 @@ export enum CommentType {
   STORE_ITEM,
 }
 
+export enum NotificationType {
+  MESSAGE,
+  PROFILE_WALL,
+  STORY,
+  CHAPTER,
+  STORE_ITEM,
+}
+
 export enum MessageDeliveryStateType {
   DRAFT,
   SENT,
