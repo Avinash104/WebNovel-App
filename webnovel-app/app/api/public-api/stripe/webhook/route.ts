@@ -37,6 +37,7 @@ export async function POST(req: Request) {
 
   // Handle successful checkout
   const handleSuccessfulCheckout = async (event: Stripe.Event) => {
+    console.log("Checkpoint 3 for checkout..")
     const session = event.data.object as Stripe.Checkout.Session
     const { userId, storyId, orderId, selectedLevel, isAutoRenewOn } =
       session.metadata!
@@ -46,24 +47,82 @@ export async function POST(req: Request) {
       ? null
       : new Date(new Date().setMonth(new Date().getMonth() + 1))
 
-    // upsert will update the membership if it already exists and create if it doesnt
-    const membership = await prismadb.membership.upsert({
+    // Get the Subscription ID (only for subscription mode)
+    const subscriptionId = session.subscription as string
+
+    console.log("Checkpoint 4 for checkout..")
+    if (!subscriptionId) {
+      console.error("❌ No subscription found in session.")
+      return new NextResponse("Subscription ID missing", { status: 400 })
+    }
+
+    console.log("Checkpoint 5 for checkout..")
+    // Retrieve the Subscription
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId, {
+      expand: ["latest_invoice.payment_intent"], // Ensure we get the full Invoice object
+    })
+
+    // Ensure latest_invoice is an object, not a string
+    if (typeof subscription.latest_invoice === "string") {
+      console.error("❌ latest_invoice is a string. Expand it properly.")
+      return new NextResponse("Error retrieving invoice", { status: 400 })
+    }
+
+    // Now safely access payment_intent
+    const invoice = subscription.latest_invoice // TypeScript now knows it's an Invoice object
+    const paymentIntent = invoice?.payment_intent as Stripe.PaymentIntent
+
+    if (!paymentIntent || paymentIntent.status !== "succeeded") {
+      console.error("❌ Subscription payment not successful.")
+      return new NextResponse("Payment not completed", { status: 400 })
+    }
+
+    console.log("✅ Subscription payment successful:", paymentIntent.id)
+
+    // Now create membership only if no existing membership
+    const existingMembership = await prismadb.membership.findUnique({
       where: {
-        userId_storyId: { userId, storyId },
-      },
-      update: {
-        membershipLevel: { connect: { id: selectedLevel } },
-        autoRenew: isAutoRenewOnBoolean,
-        expiresAt,
-      },
-      create: {
-        user: { connect: { id: userId } },
-        story: { connect: { id: storyId } },
-        membershipLevel: { connect: { id: selectedLevel } },
-        autoRenew: isAutoRenewOnBoolean,
-        expiresAt,
+        userId_storyId: {
+          userId,
+          storyId,
+        },
       },
     })
+
+    console.log("Checkpoint 7 for checkout..")
+    if (existingMembership) {
+      console.log("⚠️ Membership already exists. Ignoring duplicate payment.")
+      return new NextResponse("Membership already exists", { status: 200 })
+    }
+
+    console.log("Checkpoint 8 for checkout..")
+    // upsert will update the membership if it already exists and create if it doesnt
+    let membership
+    try {
+      membership = await prismadb.membership.upsert({
+        where: {
+          userId_storyId: { userId, storyId },
+        },
+        update: {
+          membershipLevel: { connect: { id: selectedLevel } },
+          autoRenew: isAutoRenewOnBoolean,
+          expiresAt,
+        },
+        create: {
+          user: { connect: { id: userId } },
+          story: { connect: { id: storyId } },
+          membershipLevel: { connect: { id: selectedLevel } },
+          autoRenew: isAutoRenewOnBoolean,
+          expiresAt,
+        },
+      })
+    } catch (error) {
+      if (error.code === "P2002") {
+        console.log("Duplicate membership detected, skipping upsert.")
+      } else {
+        throw error
+      }
+    }
 
     // Update the order with cust details and isPaid set to true
     const updatedOrder = await prismadb.order.update({
@@ -76,7 +135,7 @@ export async function POST(req: Request) {
     })
 
     console.log("Updated order:", updatedOrder)
-    return NextResponse.json(membership, { status: 200 })
+    return NextResponse.json(membership)
   }
 
   // Handle subscription update (e.g., renewal, plan change)

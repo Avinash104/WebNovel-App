@@ -8,7 +8,7 @@ import { useUser } from "@clerk/nextjs"
 import { Membership, MembershipLevel } from "@prisma/client"
 import axios from "axios"
 import { useParams } from "next/navigation"
-import React, { useState } from "react"
+import React, { useRef, useState } from "react"
 import { toast } from "react-hot-toast"
 
 interface SubscriptionModalProps {
@@ -29,6 +29,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
     () => profileMembership?.membershipLevelId || null
   )
   const [isAutoRenewOn, setIsAutoRenewOn] = useState<boolean>(true)
+  const isSubmitting = useRef(false)
   // Commented out the period selection for now
   // const [period, setPeriod] = useState<string>(
   //   () => profileMembership?.membershipPeriod || "MONTHLY"
@@ -82,7 +83,23 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
   //   }
   // }
 
+  const checkExistingMembership = async (userId: string, storyId: string) => {
+    const response = await axios.get("/api/author-api/membership", {
+      params: { userId, storyId },
+    })
+
+    // Return code 202 indicates that a membership alearady exists
+    if (response.status === 202) {
+      return true
+    }
+    return false
+  }
+
   const handleCheckout = async () => {
+    // Make sure the checkout API call is only made once at a time
+    if (isSubmitting.current) return
+    isSubmitting.current = true
+
     try {
       setLoading(true)
       const userId = user?.id
@@ -92,18 +109,31 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         return toast.error("Select an option.")
       }
 
+      const existingMembership = await checkExistingMembership(userId, storyId)
+      console.log("existing membership: ", existingMembership)
       const values = { userId, storyId, selectedLevel, isAutoRenewOn }
 
-      // Make API request to create Stripe checkout session
-      const { data } = await axios.post(
-        "/api/author-api/stripe/create-subscription",
-        values
-      )
-
-      if (data.sessionUrl) {
-        window.location.href = data.sessionUrl // Redirect user to Stripe Checkout
+      // Make API request to create Stripe checkout session based on if existing memberships
+      if (existingMembership) {
+        const { data } = await axios.patch(
+          "/api/author-api/stripe/subscription/update",
+          values
+        )
+        if (data.sessionUrl) {
+          window.location.href = data.sessionUrl // Redirect user to Stripe Checkout
+        } else {
+          toast.error("Failed to start checkout.")
+        }
       } else {
-        toast.error("Failed to start checkout.")
+        const { data } = await axios.post(
+          "/api/author-api/stripe/subscription/create",
+          values
+        )
+        if (data.sessionUrl) {
+          window.location.href = data.sessionUrl // Redirect user to Stripe Checkout
+        } else {
+          toast.error("Failed to start checkout.")
+        }
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -112,6 +142,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         toast.error("Something went wrong!")
       }
     } finally {
+      isSubmitting.current = false
       setLoading(false)
       subscriptionModal.onClose()
     }

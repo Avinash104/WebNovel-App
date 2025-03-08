@@ -104,6 +104,7 @@ const StoryPage = async ({
         ],
       },
       select: {
+        isActive: true,
         membershipLevel: {
           select: { title: true, chaptersLocked: true },
         },
@@ -115,6 +116,9 @@ const StoryPage = async ({
         freeChapters + userMembership.membershipLevel.chaptersLocked
 
       isAuthorized = chapter.sequence <= userEarlyAccessChapters
+      if (!userMembership.isActive) {
+        isAuthorized = false
+      }
     }
   }
 

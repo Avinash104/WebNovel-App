@@ -21,17 +21,59 @@ interface MembershipBlockProps {
 }
 
 const MembershipBlock: React.FC<MembershipBlockProps> = ({ membership }) => {
-  const [open, setOpen] = useState<boolean>(false)
+  const [openPauseOrResumeAlert, setOpenPauseOrResumeAlert] =
+    useState<boolean>(false)
+  const [openCancelSubAtEndPeriod, setOpenCancelSubAtEndPeriod] =
+    useState<boolean>(false)
+  const [openCancelSubNow, setOpenCancelSubNow] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
+  const [isSubActive, setIsSubActive] = useState<boolean>(membership?.isActive)
 
-  //   useEffect(() => {
-  //     console.log("subscriptons: ", membership)
-  //   }, [membership])
+  let cancelNow = false
 
-  const onDelete = async () => {
+  const onPauseOrResume = async () => {
     try {
       setLoading(true)
-      await axios.delete(`/api/author-api/membership/${membership.id}`)
+      const userId = membership?.userId
+      const storyId = membership?.storyId
+      const membershipId = membership?.id
+      const payload = { userId, storyId, membershipId }
+
+      if (isSubActive) {
+        await axios.patch("/api/author-api/stripe/subscription/pause", {
+          data: payload,
+        })
+        toast.success("Subscription paused successfully.")
+        setIsSubActive(false)
+      } else {
+        await axios.patch("/api/author-api/stripe/subscription/resume", {
+          data: payload,
+        })
+        toast.success("Subscription resumed successfully.")
+        setIsSubActive(true)
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        toast.error("Something went wrong!!", error.response?.data?.message)
+      } else {
+        toast.error("Something went wrong!!")
+      }
+    } finally {
+      setLoading(false)
+      setOpenPauseOrResumeAlert(false)
+    }
+  }
+
+  const onCancel = async () => {
+    try {
+      setLoading(true)
+      const userId = membership.userId
+      const storyId = membership.storyId
+      const payload = { userId, storyId, cancelNow }
+      console.log(payload)
+      await axios.delete("/api/author-api/stripe/subscription/delete", {
+        data: payload,
+      })
       toast.success("Subscription deleted successfully.")
       window.location.reload()
     } catch (error) {
@@ -42,19 +84,46 @@ const MembershipBlock: React.FC<MembershipBlockProps> = ({ membership }) => {
       }
     } finally {
       setLoading(false)
-      setOpen(false)
+      cancelNow = false
+      setOpenCancelSubAtEndPeriod(false)
+      setOpenCancelSubNow(false)
     }
+  }
+
+  const onCancelNow = () => {
+    cancelNow = true
+    onCancel()
   }
 
   return (
     <>
       <AlertModal
-        isOpen={open}
-        onClose={() => setOpen(false)}
-        onConfirm={onDelete}
+        isOpen={openPauseOrResumeAlert}
+        onClose={() => setOpenPauseOrResumeAlert(false)}
+        onConfirm={onPauseOrResume}
         loading={loading}
-        title={`Are you sure you want to delete this active subscription for ${membership.story.title}?`}
-        description="You will lose all privileges to the advance chapters."
+        title={`Are you sure you want to ${
+          isSubActive ? "pause" : "resume"
+        } this subscription for ${membership.story.title}?`}
+        description={`You will ${
+          isSubActive ? "lose" : "gain"
+        } all privileges to the advance chapters.`}
+      />
+      <AlertModal
+        isOpen={openCancelSubAtEndPeriod}
+        onClose={() => setOpenCancelSubAtEndPeriod(false)}
+        onConfirm={onCancel}
+        loading={loading}
+        title={`Are you sure you want to cancel this active subscription for ${membership.story.title}?`}
+        description="You will lose all privileges to the advance chapters at the end of the current subscription period."
+      />
+      <AlertModal
+        isOpen={openCancelSubNow}
+        onClose={() => setOpenCancelSubNow(false)}
+        onConfirm={onCancelNow}
+        loading={loading}
+        title={`Are you sure you want to permanently delete this active subscription for ${membership.story.title}?`}
+        description="You will lose all privileges to the advance chapters right away. We rocommend you cancel your subscription instead, so that you can have access to your subscription perks till the end of this billing cycle."
       />
       <Card className="w-full mx-auto p-4 shadow-md border rounded-lg">
         <CardHeader>
@@ -77,14 +146,30 @@ const MembershipBlock: React.FC<MembershipBlockProps> = ({ membership }) => {
           {membership.autoRenew ? "On" : "Off"}
         </CardContent>
         <CardFooter>
-          <div className="w-full flex justify-end items-center mt-4 ">
+          <div className="w-full flex justify-end items-center mt-4 gap-2">
+            <Button
+              disabled={loading}
+              variant="default"
+              size="lg"
+              onClick={() => setOpenPauseOrResumeAlert(true)}
+            >
+              {isSubActive ? "Pause Subscription" : "Resume Subscription"}
+            </Button>
+            <Button
+              disabled={loading}
+              variant="default"
+              size="lg"
+              onClick={() => setOpenCancelSubAtEndPeriod(true)}
+            >
+              Cancel Subscription
+            </Button>
             <Button
               disabled={loading}
               variant="destructive"
-              size="sm"
-              onClick={() => setOpen(true)}
+              size="icon"
+              onClick={() => setOpenCancelSubNow(true)}
             >
-              <Trash className="h-4 w-4" />
+              <Trash className="h-8 w-8" />
             </Button>
           </div>
         </CardFooter>

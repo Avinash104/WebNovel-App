@@ -23,7 +23,7 @@ const Navbar = async () => {
   }
 
   return (
-    <div className="fixed top-0 left-0 w-full border-b z-50 bg-gradient-to-r from-cyan-500 to-blue-500">
+    <div className="fixed top-0 left-0 w-full border-b z-50 bg-gradient-to-r from-cyan-500 to-blue-500 shadow-lg">
       <div className="container mx-auto px-4">
         <Container>
           <div className="relative px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-around">

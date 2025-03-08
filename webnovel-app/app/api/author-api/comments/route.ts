@@ -295,7 +295,7 @@ export async function POST(req: Request) {
       return NextResponse.json(newComment, { status: 200 })
     }
   } catch (error) {
-    console.error("[MEMBERSHIP_POST_ERROR]", error)
+    console.error("[COMMENTS_POST_ERROR]", error)
     return new NextResponse("Internal Server Error", { status: 500 })
   }
 }

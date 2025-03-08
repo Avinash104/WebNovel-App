@@ -61,6 +61,7 @@ model Story {
   userId              String
   memberships         Membership[]      @relation("StoryToMembership")
   views               Int               @default(0)
+  orders              Order[]           @relation("StoryToOrder")
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
@@ -128,7 +129,7 @@ model StoreItem {
   store       Store     @relation("StoreToStoreItem", fields: [storeId], references: [id], onDelete: Cascade)
   storeId     String
   comments    Comment[] @relation("StoreItemToComments")
-  order       Order?    @relation("StoreItemToOrder")
+  order       Order[]   @relation("StoreItemToOrder")
   createdAt   DateTime  @default(now())
 
   @@index([storeId])
@@ -156,10 +157,11 @@ model Membership {
   story             Story            @relation("StoryToMembership", fields: [storyId], references: [id], onDelete: Cascade)
   storyId           String
   autoRenew         Boolean          @default(true)
+  isActive          Boolean          @default(true)
   membershipLevel   MembershipLevel  @relation("MembershipLevelToMembership", fields: [membershipLevelId], references: [id], onDelete: Cascade)
-  membershipLevelId String           @unique
+  membershipLevelId String
   membershipPeriod  MembershipPeriod @default(MONTHLY)
-  order             Order?           @relation("MembershipToOrder")
+  order             Order[]          @relation("MembershipToOrder")
   subscribedAt      DateTime         @default(now())
   expiresAt         DateTime?
 
@@ -188,15 +190,25 @@ model MembershipLevel {
   @@unique([storyId, title])
 }
 
+enum OrderType {
+  SUBSCRIPTION
+  PAYMENT
+}
+
 model Order {
   id             String      @id @default(uuid())
   user           Profile     @relation("ProfileToOrder", fields: [userId], references: [id])
   userId         String
+  userMail       String
+  orderType      OrderType
+  authorId       String
   membership     Membership? @relation("MembershipToOrder", fields: [membershipId], references: [id])
-  membershipId   String?     @unique
+  membershipId   String?
+  story          Story?      @relation("StoryToOrder", fields: [storyId], references: [id])
+  storyId        String?
   storyTitle     String?
   storeItem      StoreItem?  @relation("StoreItemToOrder", fields: [storeItemId], references: [id])
-  storeItemId    String?     @unique
+  storeItemId    String?
   storeItemTitle String?
   phone          String      @default("")
   address        String      @default("")
@@ -208,6 +220,7 @@ model Order {
   @@index([userId])
   @@index([membershipId])
   @@index([storeItemId])
+  @@index([storyId])
 }
 
 enum CommentType {

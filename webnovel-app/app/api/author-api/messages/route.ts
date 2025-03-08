@@ -1,5 +1,5 @@
 import prismadb from "@/lib/prismadb"
-import { PAGE_SIZE } from "@/lib/utils"
+import { MESSAGES_PAGE_SIZE } from "@/lib/utils"
 import { currentUser } from "@clerk/nextjs/server"
 import { NotificationType } from "@prisma/client"
 import { NextResponse } from "next/server"
@@ -127,8 +127,8 @@ export async function GET(req: Request) {
     const messages = await prismadb.message.findMany({
       where: { conversationId },
       orderBy: { createdAt: "desc" },
-      skip: Number(page) * PAGE_SIZE,
-      take: PAGE_SIZE,
+      skip: Number(page) * MESSAGES_PAGE_SIZE,
+      take: MESSAGES_PAGE_SIZE,
     })
 
     return NextResponse.json(messages)

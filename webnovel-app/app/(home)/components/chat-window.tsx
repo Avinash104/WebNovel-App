@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { useChatStore } from "@/hooks/use-chat-store"
 import { supabase } from "@/lib/supabase"
-import { MessageDeliveryStateType, PAGE_SIZE } from "@/lib/utils"
+import { MessageDeliveryStateType, MESSAGES_PAGE_SIZE } from "@/lib/utils"
 import { Message } from "@prisma/client"
 import {
   RealtimePostgresInsertPayload,
@@ -41,7 +41,7 @@ export const ChatWindow = () => {
         params: { conversationId: selectedConversation?.id, page },
       })
 
-      if (response.data.length < PAGE_SIZE) setHasMore(false)
+      if (response.data.length < MESSAGES_PAGE_SIZE) setHasMore(false)
       const newMessages = response.data.reverse()
 
       setMessages((prev) => {

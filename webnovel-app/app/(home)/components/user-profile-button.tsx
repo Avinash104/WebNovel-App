@@ -12,10 +12,10 @@ import { cn } from "@/lib/utils"
 import { SignOutButton, useUser } from "@clerk/nextjs"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
 
 const UserProfileButton = () => {
   const pathname = usePathname()
-
   const { user } = useUser()
 
   const routes = [
@@ -46,10 +46,12 @@ const UserProfileButton = () => {
     },
   ]
 
+  const [open, setOpen] = useState(false)
+
   return (
     <div className="relative">
       <div className="">
-        <DropdownMenu>
+        <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
             <button className="focus:outline-none">
               <Avatar>
@@ -62,6 +64,9 @@ const UserProfileButton = () => {
             {routes.map((route) => (
               <DropdownMenuItem
                 key={route.href}
+                onClick={() => {
+                  setOpen(false)
+                }}
                 className="hover:cursor-pointer"
               >
                 <Link

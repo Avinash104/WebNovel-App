@@ -107,3 +107,5 @@ SELECT cron.schedule(
   $$
 );
 ```
+
+Delete the customerId routinely (each month) if no memberships exists for a profile

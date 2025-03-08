@@ -6,7 +6,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const PAGE_SIZE = 20
+export const MESSAGES_PAGE_SIZE = 20
+export const ORDERS_PAGE_SIZE = 20
 
 export enum pageType {
   PROFILE,
